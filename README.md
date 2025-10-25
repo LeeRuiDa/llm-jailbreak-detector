@@ -80,5 +80,5 @@ print(f"Baseline accuracy: {accuracy:.3f}")
 ---
 
 **Supervisor:** Chen Yan (chenyanru@scu.edu.cn)  
-**Student:** [Your Name]  
+**Student:** RIDA BOUBAKR 
 **Institution:** Sichuan University, Software Engineering (2022 batch)
