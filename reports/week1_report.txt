@@ -1,0 +1,22 @@
+Week 1 Progress Report
+
+Project: Catching Jailbreaks in the Wild (LLM Jailbreak Detector)
+Student: [Your Name]
+Date: 2025-10-26
+
+1. Repository set up and code organized on GitHub.
+2. Created and tested a Unicode pre-processor for cleaning risky prompt text.
+3. Built a simple rule-based baseline detector for jailbreak/attack prompts.
+4. Made a small labeled dataset and evaluated baseline accuracy using Google Colab.
+5. Simulated simple attacks (zero-width, homoglyph) and checked what bypasses the baseline.
+
+Results:
+- Baseline detector works on clear cases but misses obfuscated attacks.
+- Accuracy and initial test metrics are available from the code and charts in the notebook.
+
+Next Steps:
+- Expand sample dataset (collect more risky/benign prompts)
+- Prepare larger evaluation with external datasets (PINT, PromptShield)
+- Begin planning model training setup
+
+(Notebook and code are in the GitHub repo.)
