@@ -7,6 +7,16 @@ This repo is a **starter skeleton** to help you "lock the experiment pipeline" e
 - evaluation metrics (AUROC/AUPRC/TPR@1%FPR/ASR)
 - reproducible run artifacts (configs + metrics + predictions)
 
+## Week 4 Final
+- final backbone: microsoft/deberta-v3-base (unicode OFF, u0)
+- final run dir name: lora_v1_microsoft-deberta-v3-base_u0_20260118_153344
+- headline metrics (AUROC / TPR@1%FPR):
+  - test_main: 0.9962 / 0.9898
+  - test_main_unicode: 0.9951 / 0.9888
+  - test_jbb: 0.9181 / 0.9798
+  - test_jbb_unicode: 0.8995 / 0.9798
+- note: score orientation locked to val; val threshold persisted
+
 ## Quickstart
 1) Create env + install deps
 ```bash
