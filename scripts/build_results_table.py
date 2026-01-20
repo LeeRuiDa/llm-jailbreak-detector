@@ -187,7 +187,7 @@ def main() -> None:
     )
     ap.add_argument(
         "--metrics_names",
-        default="final_metrics_val.json,final_metrics_test_main.json,final_metrics_test_jbb.json,final_metrics_test_main_unicode.json,final_metrics_test_jbb_unicode.json,final_metrics.json,metrics.json",
+        default="final_metrics_val.json,final_metrics_test_main.json,final_metrics_test_jbb.json,final_metrics_test_main_unicode.json,final_metrics_test_jbb_unicode.json,final_metrics_test_main_adv2.json,final_metrics_test_jbb_adv2.json,final_metrics.json,metrics.json",
         help="Comma-separated metrics filenames to include.",
     )
     ap.add_argument(

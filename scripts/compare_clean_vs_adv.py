@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -151,7 +152,8 @@ def main() -> None:
             detector, backbone, unicode_flag, dataset_tag, split = key
             print(
                 "Dedup: picked latest of "
-                f"{count} for {detector}/{backbone}/{unicode_flag}/{dataset_tag}/{split}"
+                f"{count} for {detector}/{backbone}/{unicode_flag}/{dataset_tag}/{split}",
+                file=sys.stderr,
             )
     print("\n".join(lines))
 
