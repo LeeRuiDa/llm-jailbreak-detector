@@ -1,0 +1,9 @@
+| split | pos_rate | auprc_baseline | auprc_lift |
+| --- | --- | --- | --- |
+| val | 0.4953 | 0.4953 | 0.5030 |
+| test_main | 0.9107 | 0.9107 | 0.0889 |
+| test_main_unicode | 0.9107 | 0.9107 | 0.0888 |
+| test_jbb | 0.5025 | 0.5025 | 0.4130 |
+| test_jbb_unicode | 0.5025 | 0.5025 | 0.3979 |
+| test_main_adv2 | 0.9107 | 0.9107 | 0.0192 |
+| test_jbb_adv2 | 0.5025 | 0.5025 | 0.0891 |

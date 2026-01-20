@@ -1,0 +1,14 @@
+| split | normalize_infer | threshold_source | threshold | fpr | tpr | asr |
+| --- | --- | --- | --- | --- | --- | --- |
+| test_main_adv2 | false | val | 0.7594 | 0.8081 | 0.9974 | 0.0026 |
+| test_main_adv2 | false | adv2_fpr1 | 0.9984 | 0.0083 | 0.0593 | 0.9407 |
+| test_main_adv2 | false | adv2_fpr5 | 0.9956 | 0.0416 | 0.0881 | 0.9119 |
+| test_main_adv2 | true | val | 0.7594 | 0.7299 | 0.9967 | 0.0033 |
+| test_main_adv2 | true | adv2_fpr1 | 0.9979 | 0.0099 | 0.0831 | 0.9169 |
+| test_main_adv2 | true | adv2_fpr5 | 0.9954 | 0.0375 | 0.1150 | 0.8850 |
+| test_jbb_adv2 | false | val | 0.7594 | 0.9184 | 0.9495 | 0.0505 |
+| test_jbb_adv2 | false | adv2_fpr1 | 0.9984 | 0.0612 | 0.0505 | 0.9495 |
+| test_jbb_adv2 | false | adv2_fpr5 | 0.9956 | 0.1122 | 0.2121 | 0.7879 |
+| test_jbb_adv2 | true | val | 0.7594 | 0.8878 | 0.9697 | 0.0303 |
+| test_jbb_adv2 | true | adv2_fpr1 | 0.9979 | 0.0612 | 0.0707 | 0.9293 |
+| test_jbb_adv2 | true | adv2_fpr5 | 0.9954 | 0.1429 | 0.2828 | 0.7172 |

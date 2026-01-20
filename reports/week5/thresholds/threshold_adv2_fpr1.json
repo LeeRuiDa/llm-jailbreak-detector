@@ -1,0 +1,10 @@
+{
+  "source_predictions": "runs\\lora_v1_microsoft-deberta-v3-base_u0_20260118_153344\\predictions_val_adv2.jsonl",
+  "target_fpr": 0.01,
+  "threshold": 0.9983701109886169,
+  "actual_fpr": 0.010058403634003893,
+  "n_neg": 3082,
+  "n_pos": 3024,
+  "pos_rate": 0.495250573206682,
+  "normalize_infer": false
+}

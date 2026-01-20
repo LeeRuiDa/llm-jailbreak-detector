@@ -20,6 +20,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from src.data.io import load_examples
 from src.preprocess.unicode import normalize_text
+from src.preprocess.normalize import normalize_text as normalize_infer_text
 
 
 @dataclass
@@ -126,11 +127,13 @@ def _load_model(run_dir: Path, backbone: str):
     return model
 
 
-def _load_records(path: Path, use_unicode: bool) -> List[Record]:
+def _load_records(path: Path, use_unicode: bool, normalize_infer: bool, normalize_drop_mn: bool) -> List[Record]:
     examples = load_examples(str(path))
     rows: List[Record] = []
     for ex in examples:
         text = normalize_text(ex.text) if use_unicode else ex.text
+        if normalize_infer:
+            text = normalize_infer_text(text, remove_cf=True, remove_mn=normalize_drop_mn)
         rows.append(Record(id=ex.id, text=text, label=int(ex.label)))
     return rows
 
@@ -219,6 +222,16 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--num_workers", type=int, default=0)
     group = ap.add_mutually_exclusive_group()
     group.add_argument("--fail_if_inverted", action="store_true", help="Fail if scores appear inverted.")
+    ap.add_argument(
+        "--normalize_infer",
+        action="store_true",
+        help="Apply NFKC + strip Cf (and optionally Mn) at inference time.",
+    )
+    ap.add_argument(
+        "--normalize_drop_mn",
+        action="store_true",
+        help="When --normalize_infer is set, also drop Mn characters.",
+    )
     ap.set_defaults(fail_if_inverted=False)
     return ap.parse_args()
 
@@ -252,7 +265,12 @@ def main() -> None:
     )
     max_length = int(cfg.get("max_length", 256))
 
-    rows = _load_records(data_path, use_unicode=use_unicode)
+    rows = _load_records(
+        data_path,
+        use_unicode=use_unicode,
+        normalize_infer=bool(args.normalize_infer),
+        normalize_drop_mn=bool(args.normalize_drop_mn),
+    )
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer, return_tensors="pt")
     collate_fn = lambda feats: _collate_with_extras(feats, data_collator)  # noqa: E731
     loader = DataLoader(
@@ -289,6 +307,8 @@ def main() -> None:
     metrics["threshold_source"] = "val" if val_threshold is not None else None
     metrics["score_is_attack_prob"] = True
     metrics["score_transform"] = score_transform
+    metrics["normalize_infer"] = bool(args.normalize_infer)
+    metrics["normalize_drop_mn"] = bool(args.normalize_drop_mn)
 
     auc, inv_auc, inverted = _auc_stats(all_labels, all_scores)
     if inverted and args.fail_if_inverted:
@@ -308,10 +328,11 @@ def main() -> None:
                 f"fpr@thr={metrics.get('fpr_actual'):.4f} tpr@thr={metrics.get('tpr_at_fpr'):.4f}"
             )
 
-    pred_path = run_dir / f"predictions_{split_name}.jsonl"
+    suffix = "_norm" if args.normalize_infer else ""
+    pred_path = run_dir / f"predictions_{split_name}{suffix}.jsonl"
     _write_predictions(pred_path, all_ids, all_labels, all_scores)
 
-    metrics_path = run_dir / f"final_metrics_{split_name}.json"
+    metrics_path = run_dir / f"final_metrics_{split_name}{suffix}.json"
     metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
     cfg[f"{split_name}_path"] = str(data_path.resolve())
