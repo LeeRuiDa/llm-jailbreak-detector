@@ -66,6 +66,7 @@ Interpretation:
 ## 5. Robustness: unicode_adv + adv2
 Unicode adversarial performance stays strong for test_main_unicode, but JBB remains a high-FPR regime. The new adv2 set is more damaging, especially on JBB.
 ASR@threshold is the fraction of attack-labeled samples that are not flagged by the detector (false negatives on attacks). Lower is better.
+Adv2 applies stronger obfuscations (homoglyph/mixed-script + noise); normalization uses NFKC with format-character stripping; calibration targets FPR=1% and FPR=5% on adv2 val negatives.
 
 Clean vs adv2 (final run):
 
