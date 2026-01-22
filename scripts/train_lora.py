@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 import subprocess
 import sys
 from contextlib import nullcontext
@@ -30,6 +31,9 @@ if str(REPO_ROOT) not in sys.path:
 from src.data.io import load_examples
 from src.eval.metrics import compute_metrics, tpr_at_fpr
 from src.preprocess.unicode import normalize_text
+from src.preprocess.normalize import normalize_text as normalize_infer_text
+from src.augment.adv2 import apply_adv2
+from src.augment.rewrite import apply_rewrite
 
 BASELINE_VERSION = "v0.3-week4"
 DEFAULT_BACKBONE = "roberta-base"
@@ -116,11 +120,26 @@ class Record:
     label: int
 
 
-def load_records(path: Path, use_unicode: bool) -> List[Record]:
+def load_records(
+    path: Path,
+    use_unicode: bool,
+    *,
+    normalize_train: bool = False,
+    normalize_drop_mn: bool = False,
+    aug_adv2_prob: float = 0.0,
+    aug_rewrite_prob: float = 0.0,
+    aug_rng: random.Random | None = None,
+) -> List[Record]:
     examples = load_examples(str(path))
     rows: List[Record] = []
     for ex in examples:
         text = normalize_text(ex.text) if use_unicode else ex.text
+        if normalize_train:
+            text = normalize_infer_text(text, remove_cf=True, remove_mn=normalize_drop_mn)
+        if aug_rng and aug_adv2_prob > 0 and aug_rng.random() < aug_adv2_prob:
+            text, _ = apply_adv2(text, aug_rng)
+        if aug_rng and aug_rewrite_prob > 0 and aug_rng.random() < aug_rewrite_prob:
+            text, _ = apply_rewrite(text, aug_rng)
         rows.append(Record(id=ex.id, text=text, label=int(ex.label)))
     return rows
 
@@ -238,6 +257,11 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--test_jbb", required=True, help="Path to test_jbb.jsonl")
     ap.add_argument("--backbone", default=DEFAULT_BACKBONE, help="HF model id for backbone (default: roberta-base)")
     ap.add_argument("--unicode_preprocess", action="store_true", help="Apply Unicode normalization to text")
+    ap.add_argument("--normalize_train", action="store_true", help="Apply NFKC + strip Cf (and optionally Mn) during training")
+    ap.add_argument("--normalize_drop_mn", action="store_true", help="When --normalize_train is set, also drop Mn characters")
+    ap.add_argument("--aug_adv2_prob", type=float, default=0.0, help="Probability of applying adv2 augmentation per sample")
+    ap.add_argument("--aug_rewrite_prob", type=float, default=0.0, help="Probability of applying rewrite augmentation per sample")
+    ap.add_argument("--aug_seed", type=int, default=42, help="Seed for augmentation randomness")
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--batch_size", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-4)
@@ -282,7 +306,16 @@ def main() -> None:
     model.print_trainable_parameters()
     model.to(device)
 
-    train_rows = load_records(Path(args.train), use_unicode)
+    aug_rng = random.Random(args.aug_seed)
+    train_rows = load_records(
+        Path(args.train),
+        use_unicode,
+        normalize_train=bool(args.normalize_train),
+        normalize_drop_mn=bool(args.normalize_drop_mn),
+        aug_adv2_prob=float(args.aug_adv2_prob),
+        aug_rewrite_prob=float(args.aug_rewrite_prob),
+        aug_rng=aug_rng,
+    )
     val_rows = load_records(Path(args.val), use_unicode)
     test_main_rows = load_records(Path(args.test_main), use_unicode)
     test_jbb_rows = load_records(Path(args.test_jbb), use_unicode)
@@ -470,6 +503,11 @@ def main() -> None:
         "epochs": args.epochs,
         "warmup_ratio": DEFAULT_WARMUP_RATIO,
         "total_steps": total_steps,
+        "normalize_train": bool(args.normalize_train),
+        "normalize_drop_mn": bool(args.normalize_drop_mn),
+        "aug_adv2_prob": float(args.aug_adv2_prob),
+        "aug_rewrite_prob": float(args.aug_rewrite_prob),
+        "aug_seed": args.aug_seed,
         "lora": {
             "r": LORA_R,
             "alpha": LORA_ALPHA,

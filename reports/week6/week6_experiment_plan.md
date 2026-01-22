@@ -6,7 +6,7 @@ Train-time robustness for adv2 and rewrite perturbations with a minimal ablation
 ## Fixed backbone and settings
 - Backbone: microsoft/deberta-v3-base
 - LoRA config: same as Week 4 final
-- Target FPR: 1% for val threshold
+- Operating point: use the val_threshold saved in each run's config; for the baseline it corresponds to ~1% FPR on val
 
 ## Perturbation families
 - Family A: unicode/adv2 (existing)

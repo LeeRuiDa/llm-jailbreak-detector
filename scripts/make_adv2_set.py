@@ -3,54 +3,15 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from pathlib import Path
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-PUNCT_CHARS = [".", ",", "!", "?", ";", ":", "-", "_", "/"]
-
-# Simple homoglyph swaps (Latin -> Cyrillic/Greek lookalikes) to stress mixed scripts.
-HOMOGLYPHS = {
-    "A": "Α",  # Greek Alpha
-    "B": "Β",  # Greek Beta
-    "C": "С",  # Cyrillic Es
-    "E": "Е",  # Cyrillic Ie
-    "H": "Н",  # Cyrillic En
-    "I": "І",  # Cyrillic Byelorussian-Ukrainian I
-    "J": "Ј",  # Cyrillic Je
-    "K": "Κ",  # Greek Kappa
-    "M": "Μ",  # Greek Mu
-    "N": "Ν",  # Greek Nu
-    "O": "О",  # Cyrillic O
-    "P": "Р",  # Cyrillic Er
-    "S": "Ѕ",  # Cyrillic Dze
-    "T": "Τ",  # Greek Tau
-    "X": "Χ",  # Greek Chi
-    "Y": "Υ",  # Greek Upsilon
-    "a": "а",  # Cyrillic a
-    "c": "с",  # Cyrillic es
-    "e": "е",  # Cyrillic ie
-    "i": "і",  # Cyrillic i
-    "o": "о",  # Cyrillic o
-    "p": "р",  # Cyrillic er
-    "x": "х",  # Cyrillic ha
-    "y": "у",  # Cyrillic u
-}
-
-MIXED_SCRIPT_SAMPLES = [
-    "α",  # Greek alpha
-    "β",  # Greek beta
-    "γ",  # Greek gamma
-    "δ",  # Greek delta
-    "λ",  # Greek lambda
-    "π",  # Greek pi
-    "σ",  # Greek sigma
-    "ω",  # Greek omega
-    "ж",  # Cyrillic zhe
-    "д",  # Cyrillic de
-    "я",  # Cyrillic ya
-    "ш",  # Cyrillic sha
-]
+from src.augment.adv2 import apply_adv2
 
 
 def _load_jsonl(path: Path) -> Iterable[Dict]:
@@ -60,56 +21,6 @@ def _load_jsonl(path: Path) -> Iterable[Dict]:
             if not line:
                 continue
             yield json.loads(line)
-
-
-def _apply_perturbations(
-    text: str,
-    rng: random.Random,
-    case_prob: float,
-    space_prob: float,
-    punct_prob: float,
-    zero_width_prob: float,
-    zero_width_max: int,
-    homoglyph_prob: float,
-    mixed_script_prob: float,
-) -> Tuple[str, Dict[str, int]]:
-    out = []
-    counts = {
-        "case_flip": 0,
-        "extra_space": 0,
-        "punct_insert": 0,
-        "zero_width": 0,
-        "homoglyph_swap": 0,
-        "mixed_script_insert": 0,
-    }
-    for ch in text:
-        if ch.isalpha() and rng.random() < case_prob:
-            ch = ch.swapcase()
-            counts["case_flip"] += 1
-        if ch in HOMOGLYPHS and rng.random() < homoglyph_prob:
-            ch = HOMOGLYPHS[ch]
-            counts["homoglyph_swap"] += 1
-        out.append(ch)
-
-        if ch == " " and rng.random() < space_prob:
-            extra = " " * rng.randint(1, 2)
-            out.append(extra)
-            counts["extra_space"] += len(extra)
-
-        if rng.random() < punct_prob:
-            out.append(rng.choice(PUNCT_CHARS))
-            counts["punct_insert"] += 1
-
-        if rng.random() < mixed_script_prob:
-            out.append(rng.choice(MIXED_SCRIPT_SAMPLES))
-            counts["mixed_script_insert"] += 1
-
-        if zero_width_prob > 0 and rng.random() < zero_width_prob:
-            inserts = rng.randint(1, max(1, zero_width_max))
-            out.append("\u200b" * inserts)
-            counts["zero_width"] += inserts
-
-    return "".join(out), counts
 
 
 def parse_args() -> argparse.Namespace:
@@ -137,7 +48,7 @@ def main() -> None:
     with out_path.open("w", encoding="utf-8") as out_f:
         for row in _load_jsonl(in_path):
             text = row.get("text", "")
-            perturbed, counts = _apply_perturbations(
+            perturbed, counts = apply_adv2(
                 text,
                 rng,
                 case_prob=args.case_prob,
