@@ -16,7 +16,7 @@ eval_protocol:
 - normalize_infer: off
 - threshold: val_threshold from run config.json
 
-decision_commit: 79a7af837b472597cdd6d0c980d22eb4acd9fee0
+decision_commit: 52f84201452c9833f0de2cee11b6d0f5219c30bf
 
 rationale:
 Meets clean/unicode constraints with minimal recall loss, improves transfer without recall collapse.
