@@ -1,0 +1,54 @@
+[
+  {
+    "run_id": "week7_control",
+    "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_control",
+    "name": "control",
+    "normalize_train": false,
+    "aug_adv2_prob": 0.0,
+    "aug_rewrite_prob": 0.0,
+    "aug_seed": 42,
+    "seed": 42,
+    "val_threshold": 0.6894465684890747,
+    "timestamp": "2026-01-22T17:47:36.751351+00:00",
+    "git_commit": "91ae94e334944206ad7104ad010739c8a6671f16"
+  },
+  {
+    "run_id": "week7_norm_only",
+    "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only",
+    "name": "norm_only",
+    "normalize_train": true,
+    "aug_adv2_prob": 0.0,
+    "aug_rewrite_prob": 0.0,
+    "aug_seed": 42,
+    "seed": 42,
+    "val_threshold": 0.7340390086174011,
+    "timestamp": "2026-01-22T20:15:01.555769+00:00",
+    "git_commit": "91ae94e334944206ad7104ad010739c8a6671f16"
+  },
+  {
+    "run_id": "week7_adv2_only",
+    "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_adv2_only",
+    "name": "adv2_only",
+    "normalize_train": false,
+    "aug_adv2_prob": 0.25,
+    "aug_rewrite_prob": 0.0,
+    "aug_seed": 42,
+    "seed": 42,
+    "val_threshold": 0.5624276399612427,
+    "timestamp": "2026-01-22T22:44:14.047432+00:00",
+    "git_commit": "91ae94e334944206ad7104ad010739c8a6671f16"
+  },
+  {
+    "run_id": "week7_norm_plus_adv2",
+    "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_plus_adv2",
+    "name": "norm_plus_adv2",
+    "normalize_train": true,
+    "aug_adv2_prob": 0.25,
+    "aug_rewrite_prob": 0.0,
+    "aug_seed": 42,
+    "seed": 42,
+    "val_threshold": 0.6814916729927063,
+    "timestamp": "2026-01-23T01:12:46.503261+00:00",
+    "git_commit": "91ae94e334944206ad7104ad010739c8a6671f16"
+  }
+]

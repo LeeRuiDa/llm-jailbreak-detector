@@ -1,0 +1,55 @@
+{
+  "version": "week7-ablation-v1",
+  "backbone": "microsoft/deberta-v3-base",
+  "dataset": {
+    "train": "data/v1/train.jsonl",
+    "val": "data/v1/val.jsonl",
+    "test_main": "data/v1/test_main.jsonl",
+    "test_jbb": "data/v1_holdout/test_jbb.jsonl"
+  },
+  "training": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 0.0002,
+    "grad_accum": 2,
+    "seed": 42,
+    "max_length": 256,
+    "unicode_preprocess": false,
+    "normalize_drop_mn": false,
+    "num_workers": 0
+  },
+  "runs": [
+    {
+      "name": "control",
+      "run_id": "week7_control",
+      "normalize_train": false,
+      "aug_adv2_prob": 0.0,
+      "aug_rewrite_prob": 0.0,
+      "aug_seed": 42
+    },
+    {
+      "name": "norm_only",
+      "run_id": "week7_norm_only",
+      "normalize_train": true,
+      "aug_adv2_prob": 0.0,
+      "aug_rewrite_prob": 0.0,
+      "aug_seed": 42
+    },
+    {
+      "name": "adv2_only",
+      "run_id": "week7_adv2_only",
+      "normalize_train": false,
+      "aug_adv2_prob": 0.25,
+      "aug_rewrite_prob": 0.0,
+      "aug_seed": 42
+    },
+    {
+      "name": "norm_plus_adv2",
+      "run_id": "week7_norm_plus_adv2",
+      "normalize_train": true,
+      "aug_adv2_prob": 0.25,
+      "aug_rewrite_prob": 0.0,
+      "aug_seed": 42
+    }
+  ]
+}
