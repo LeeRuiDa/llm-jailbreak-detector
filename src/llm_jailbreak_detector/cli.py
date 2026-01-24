@@ -4,6 +4,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from importlib import metadata
 
 from .io import iter_input_records, write_jsonl
 from .normalize import normalize_text
@@ -59,6 +60,8 @@ def _build_parser() -> argparse.ArgumentParser:
     normalize = sub.add_parser("normalize", help="Normalize text only")
     normalize.add_argument("--text", required=True, help="Input text")
     normalize.add_argument("--drop-mn", action="store_true", help="Drop Mn marks")
+
+    doctor = sub.add_parser("doctor", help="Print environment diagnostics")
 
     return parser
 
@@ -132,6 +135,30 @@ def _run_normalize(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_doctor() -> int:
+    python_version = sys.version.split()[0]
+    platform_info = sys.platform
+    try:
+        package_version = metadata.version("llm-jailbreak-detector")
+    except metadata.PackageNotFoundError:
+        package_version = "unknown"
+    print(f"Python: {python_version}")
+    print(f"Platform: {platform_info}")
+    print(f"Package: {package_version}")
+    deps_ok = True
+    for name in ("torch", "transformers", "peft"):
+        try:
+            __import__(name)
+            status = "installed"
+        except ImportError:
+            status = "not installed"
+            deps_ok = False
+        print(f"LoRA deps ({name}): {status}")
+    if not deps_ok:
+        print("Hint: install LoRA dependencies with: pip install .[lora]")
+    return 0
+
+
 def main() -> int:
     parser = _build_parser()
     args = parser.parse_args()
@@ -141,6 +168,8 @@ def main() -> int:
         return _run_batch(args)
     if args.command == "normalize":
         return _run_normalize(args)
+    if args.command == "doctor":
+        return _run_doctor()
     parser.print_help()
     return 1
 

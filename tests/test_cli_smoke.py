@@ -54,3 +54,18 @@ def test_jbd_predict_rules() -> None:
     payload = json.loads(result.stdout.strip().splitlines()[-1])
     assert payload["detector"] == "rules"
     assert payload["flagged"] is True
+
+
+def test_jbd_doctor() -> None:
+    cmd = _command_base() + ["doctor"]
+    result = subprocess.run(
+        cmd,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=_env_with_src(),
+    )
+    assert result.returncode == 0
+    output = result.stdout
+    assert "Python" in output
+    assert "LoRA deps" in output
