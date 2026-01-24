@@ -75,8 +75,8 @@ def _run_predict(args: argparse.Namespace) -> int:
         )
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)
-        if args.detector == "lora" and not args.run_dir:
-            print("hint: provide --run_dir or use --detector rules", file=sys.stderr)
+        if args.detector == "lora":
+            print("hint: Use --detector rules for offline mode.", file=sys.stderr)
         return 2
 
     payload = {
@@ -120,8 +120,8 @@ def _run_batch(args: argparse.Namespace) -> int:
         write_jsonl(Path(args.output), rows)
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)
-        if args.detector == "lora" and not args.run_dir:
-            print("hint: provide --run_dir or use --detector rules", file=sys.stderr)
+        if args.detector == "lora":
+            print("hint: Use --detector rules for offline mode.", file=sys.stderr)
         return 2
     return 0
 
