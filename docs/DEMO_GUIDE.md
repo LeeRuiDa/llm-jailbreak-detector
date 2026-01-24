@@ -12,4 +12,4 @@ jbd batch --input examples/sample_inputs.jsonl --output out.jsonl --detector rul
 
 Notes:
 - Rules mode is fully offline.
-- LoRA mode requires `--run_dir` and local model weights in the HF cache.
+- LoRA mode: `pip install -e ".[lora]"` then use `--run_dir` with local weights.

@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .lora_detector import LoraDetector
 from .normalize import normalize_text
 from .rules_detector import RulesDetector
 
@@ -30,6 +29,8 @@ class Predictor:
         else:
             if not run_dir:
                 raise ValueError("run_dir is required for lora detector")
+            from .lora_detector import LoraDetector
+
             self.detector = LoraDetector(run_dir)
 
     def _resolve_threshold(self, threshold: float | str | None) -> tuple[float, str]:

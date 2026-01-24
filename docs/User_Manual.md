@@ -2,7 +2,7 @@
 
 ## Install
 
-Recommended (editable install):
+Rules demo (editable install):
 
 ```bash
 python -m venv .venv
@@ -10,10 +10,10 @@ python -m venv .venv
 pip install -e .
 ```
 
-Alternative (use existing requirements file):
+LoRA install (optional):
 
 ```bash
-pip install -r requirements.txt
+pip install -e ".[lora]"
 ```
 
 ## CLI overview
@@ -41,7 +41,7 @@ jbd normalize --text "he\u200bllo" --drop-mn
 ## Offline mode
 
 - Rules detector: fully offline, zero downloads.
-- LoRA detector: optional; requires a local `run_dir` plus a populated HF cache or local weights.
+- LoRA detector: optional; requires a local `run_dir`, local weights, and the `lora` extra installed.
 
 ## Input formats
 

@@ -44,9 +44,14 @@ class LoraDetector:
     def _load_model(self) -> None:
         if self._model is not None:
             return
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer
-        from peft import PeftModel
-        import torch
+        try:
+            from transformers import AutoModelForSequenceClassification, AutoTokenizer
+            from peft import PeftModel
+            import torch
+        except ImportError as exc:
+            raise RuntimeError(
+                "LoRA dependencies not installed. Run pip install .[lora]."
+            ) from exc
 
         adapter_dir = self.run_dir / "lora_adapter"
         if not adapter_dir.exists():
