@@ -12,3 +12,6 @@ build/
 runs/
 data/
 Dataset v1/
+
+# Eval artifacts
+artifacts/
