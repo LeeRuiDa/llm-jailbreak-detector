@@ -7,7 +7,7 @@ This repo is a **starter skeleton** to help you "lock the experiment pipeline" e
 - evaluation metrics (AUROC/AUPRC/TPR@1%FPR/ASR)
 - reproducible run artifacts (configs + metrics + predictions)
 
-## Week 4 Final
+## Week 7 Final
 - final backbone: microsoft/deberta-v3-base (unicode OFF, u0)
 - final run dir name: lora_v1_microsoft-deberta-v3-base_u0_20260118_153344
 - headline metrics (AUROC / TPR@1%FPR):
@@ -22,7 +22,11 @@ This repo is a **starter skeleton** to help you "lock the experiment pipeline" e
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # (Windows: .venv\Scripts\activate)
-pip install -r requirements.txt
+pip install -e .
+```
+Optional LoRA extras:
+```bash
+pip install -e ".[lora]"
 ```
 
 2) Run a sanity-check evaluation on the sample dataset:
@@ -39,3 +43,7 @@ You should get:
 ```bash
 pytest -q
 ```
+
+## Examiner Quickstart
+- Follow docs/DEMO_GUIDE.md
+- Locked eval pack: reports/week7/locked_eval_pack/week7_norm_only/
