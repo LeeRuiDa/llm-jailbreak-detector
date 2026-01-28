@@ -1,0 +1,4 @@
+flowchart LR
+    U[User prompt/context] --> D[Detector]
+    D -->|allow| L[LLM]
+    D -->|block| R[Refusal / policy response]

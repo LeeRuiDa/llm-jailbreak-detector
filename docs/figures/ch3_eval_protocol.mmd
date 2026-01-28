@@ -1,0 +1,19 @@
+flowchart TB
+    DS[Dataset] --> V[Validation split]
+    DS --> T1[Test main]
+    DS --> T2[Test JBB]
+    DS --> T3[Test main unicode]
+    DS --> T4[Test JBB unicode]
+    DS --> T5[Test main adv2]
+    DS --> T6[Test JBB adv2]
+    DS --> T7[Test main rewrite]
+    DS --> T8[Test JBB rewrite]
+    V --> TH[Learn val_threshold]
+    TH -->|fixed transfer| T1
+    TH -->|fixed transfer| T2
+    TH -->|fixed transfer| T3
+    TH -->|fixed transfer| T4
+    TH -->|fixed transfer| T5
+    TH -->|fixed transfer| T6
+    TH -->|fixed transfer| T7
+    TH -->|fixed transfer| T8
