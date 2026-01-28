@@ -1,0 +1,62 @@
+{
+  "train": {
+    "total_rows": 201276,
+    "n_attack": 186417,
+    "n_benign": 14859,
+    "attack_rate": 0.926176
+  },
+  "val": {
+    "total_rows": 6106,
+    "n_attack": 3024,
+    "n_benign": 3082,
+    "attack_rate": 0.495251
+  },
+  "test_main": {
+    "total_rows": 35230,
+    "n_attack": 32083,
+    "n_benign": 3147,
+    "attack_rate": 0.910673
+  },
+  "test_jbb": {
+    "total_rows": 197,
+    "n_attack": 99,
+    "n_benign": 98,
+    "attack_rate": 0.502538
+  },
+  "test_main_unicode": {
+    "total_rows": 35230,
+    "n_attack": 32083,
+    "n_benign": 3147,
+    "attack_rate": 0.910673
+  },
+  "test_jbb_unicode": {
+    "total_rows": 197,
+    "n_attack": 99,
+    "n_benign": 98,
+    "attack_rate": 0.502538
+  },
+  "test_main_adv2": {
+    "total_rows": 35230,
+    "n_attack": 32083,
+    "n_benign": 3147,
+    "attack_rate": 0.910673
+  },
+  "test_jbb_adv2": {
+    "total_rows": 197,
+    "n_attack": 99,
+    "n_benign": 98,
+    "attack_rate": 0.502538
+  },
+  "test_main_rewrite": {
+    "total_rows": 35230,
+    "n_attack": 32083,
+    "n_benign": 3147,
+    "attack_rate": 0.910673
+  },
+  "test_jbb_rewrite": {
+    "total_rows": 197,
+    "n_attack": 99,
+    "n_benign": 98,
+    "attack_rate": 0.502538
+  }
+}
