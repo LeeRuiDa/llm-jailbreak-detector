@@ -1,0 +1,57 @@
+{
+  "sources": {
+    "ablation_spec": "reports/week7/week7_ablation_spec.json",
+    "final_selection": "reports/week7/locked_eval_pack/week7_norm_only/WEEK7_FINAL.md",
+    "val_threshold_source": "reports/week7/locked_eval_pack/week7_norm_only/tables/week7_table_A_clean_unicode.md (row: week7_norm_only val)"
+  },
+  "winner_run_id": "week7_norm_only",
+  "model": {
+    "backbone": "microsoft/deberta-v3-base",
+    "tokenizer": null,
+    "max_length": 256,
+    "lora": {
+      "note": "LoRA parameters not specified in sources"
+    }
+  },
+  "training": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 0.0002,
+    "grad_accum": 2,
+    "seed": 42,
+    "num_workers": 0
+  },
+  "normalization": {
+    "normalize_train": true,
+    "normalize_infer": false,
+    "unicode_preprocess": false,
+    "normalize_drop_mn": false
+  },
+  "augmentation": {
+    "aug_adv2_prob": 0.0,
+    "aug_rewrite_prob": 0.0,
+    "aug_seed": 42
+  },
+  "threshold": {
+    "val_threshold": 0.7340,
+    "policy": "learned on val, transferred unchanged to all test splits"
+  },
+  "protocol": {
+    "script": "scripts/eval_week7_grid.py",
+    "splits": [
+      "val",
+      "test_main",
+      "test_jbb",
+      "test_main_unicode",
+      "test_jbb_unicode",
+      "test_main_adv2",
+      "test_jbb_adv2",
+      "test_main_rewrite",
+      "test_jbb_rewrite"
+    ]
+  },
+  "reproducibility_notes": [
+    "normalize_infer is OFF for locked evaluations",
+    "threshold is fixed from validation for all test splits"
+  ]
+}
