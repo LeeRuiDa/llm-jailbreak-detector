@@ -27,8 +27,17 @@ def main() -> int:
         print(f"Missing plan file: {PLAN_PATH}")
         return 1
 
-    text = PLAN_PATH.read_text(encoding="utf-8")
-    paths = extract_paths(text)
+    texts = [PLAN_PATH.read_text(encoding="utf-8")]
+    thesis_dir = Path("thesis")
+    for md_path in sorted(thesis_dir.glob("*.md")):
+        if md_path == PLAN_PATH:
+            continue
+        texts.append(md_path.read_text(encoding="utf-8"))
+
+    paths: list[str] = []
+    for text in texts:
+        paths.extend(extract_paths(text))
+    paths = sorted(set(paths))
 
     allow_missing_mermaid = os.environ.get("THESIS_ALLOW_MISSING_MERMAID_PNG") == "1"
 
