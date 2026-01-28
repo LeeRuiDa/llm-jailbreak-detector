@@ -1,7 +1,7 @@
 flowchart TB
-    CLI[CLI (jbd)] --> P[Predictor]
-    P --> N[Normalization]
-    P --> RD[RulesDetector]
-    P --> LD[LoraDetector]
-    ES[Eval scripts] --> RP[Reports / locked eval pack]
+    CLI["CLI (jbd)"] --> P["Predictor"]
+    P --> N["Normalization"]
+    P --> RD["RulesDetector"]
+    P --> LD["LoraDetector"]
+    ES["Eval scripts"] --> RP["Reports / locked eval pack"]
     N --> P
