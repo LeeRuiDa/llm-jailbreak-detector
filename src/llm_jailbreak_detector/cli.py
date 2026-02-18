@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 from importlib import metadata
 
@@ -70,24 +71,34 @@ def _run_predict(args: argparse.Namespace) -> int:
     try:
         threshold = _parse_threshold(args.threshold)
         predictor = Predictor(detector=args.detector, run_dir=args.run_dir)
+        start = time.perf_counter()
         result = predictor.predict(
             args.text,
             threshold=threshold,
             normalize_infer=args.normalize,
             drop_mn=args.drop_mn,
         )
+        latency_ms = (time.perf_counter() - start) * 1000.0
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)
         if args.detector == "lora":
             print("hint: Use --detector rules for offline mode.", file=sys.stderr)
         return 2
 
+    decision = "block" if bool(result.label) else "allow"
+    model_version = result.metadata.get("model_name") if result.detector == "lora" else "rules_v0"
     payload = {
         "text": args.text,
         "score": result.score,
+        "label": int(result.label),
+        "decision": decision,
         "threshold": result.threshold,
+        "threshold_used": result.threshold,
         "flagged": bool(result.label),
         "detector": result.detector,
+        "model_version": model_version,
+        "latency_ms": round(latency_ms, 3),
+        "rationale": None,
         "normalize_infer": bool(result.metadata.get("normalize_infer")),
     }
     if args.record_id is not None:
@@ -103,18 +114,30 @@ def _run_batch(args: argparse.Namespace) -> int:
         rows = []
         for record in iter_input_records(Path(args.input)):
             text = record["text"]
+            start = time.perf_counter()
             result = predictor.predict(
                 text,
                 threshold=threshold,
                 normalize_infer=args.normalize,
                 drop_mn=args.drop_mn,
             )
+            latency_ms = (time.perf_counter() - start) * 1000.0
+            decision = "block" if bool(result.label) else "allow"
+            model_version = (
+                result.metadata.get("model_name") if result.detector == "lora" else "rules_v0"
+            )
             payload = {
                 "text": text,
                 "score": result.score,
+                "label": int(result.label),
+                "decision": decision,
                 "threshold": result.threshold,
+                "threshold_used": result.threshold,
                 "flagged": bool(result.label),
                 "detector": result.detector,
+                "model_version": model_version,
+                "latency_ms": round(latency_ms, 3),
+                "rationale": None,
                 "normalize_infer": bool(result.metadata.get("normalize_infer")),
             }
             if "id" in record:

@@ -1,0 +1,13 @@
+# Paper-System-Repo Traceability Matrix
+
+| Claimed component | Thesis ref (Ch3/4/5) | Ch6 ref | Repo path(s) | Status | Notes/Fix |
+| --- | --- | --- | --- | --- | --- |
+| Canonical text template `[PROMPT]...[CONTEXT]` | Ch3.2 | 6.2, 6.3 | `scripts/dataset_utils.py`, `scripts/ingest_bipia.py`, `scripts/ingest_jailbreakdb.py` | Partial | Template exists; escaping of delimiter tokens inside raw prompt/context is not explicit. Minimal fix: add escaping/sentinel replacement in `scripts/dataset_utils.py::format_text`. |
+| Normalization configuration (train/infer controls) | Ch3.3 | 6.2, 6.3 | `src/preprocess/normalize.py`, `src/preprocess/unicode.py`, `scripts/train_lora.py`, `scripts/eval_lora_from_run.py`, `src/llm_jailbreak_detector/cli.py` | Implemented | Training and inference flags are explicit and separately controlled. |
+| Rules baseline detector | Ch3.4 | 6.3 | `src/baselines/rules.py`, `src/llm_jailbreak_detector/rules_detector.py` | Implemented | Default runtime backend (`--detector rules`). |
+| LoRA classifier detector | Ch3.4, Ch4 | 6.3 | `scripts/train_lora.py`, `src/llm_jailbreak_detector/lora_detector.py`, `runs/week7_norm_only/config.json` | Implemented | Local-artifact inference path with persisted threshold and model metadata. |
+| Threshold tau selection on validation and fixed transfer | Ch3.5/3.6, Ch4, Ch5 | 6.2, 6.3, 6.5 | `src/eval/metrics.py`, `scripts/train_lora.py`, `scripts/eval_lora_from_run.py`, `reports/week7/locked_eval_pack/week7_norm_only/README.md` | Implemented | Operational point chosen at target FPR and transferred unchanged to test splits. |
+| Perturbation evaluation scripts (unicode/adv2/rewrite) | Ch4, Ch5 | 6.3, 6.5 | `scripts/eval_week7_grid.py`, `scripts/make_unicode_adversarial_set.py`, `scripts/make_adv2_set.py`, `scripts/make_rewrite_set.py` | Implemented | Split grid and perturbation generators are versioned in repo. |
+| Locked eval pack generation pipeline | Ch4, Ch5 | 6.5 | `scripts/build_week7_tables.py`, `scripts/lock_week7_eval_pack.py`, `reports/week7/locked_eval_pack/week7_norm_only/*` | Implemented | Produces tables, plots, error cases, and environment snapshot. |
+| Error case export and analysis | Ch4, Ch5 | 6.5 | `scripts/dump_error_cases.py`, `reports/week7/locked_eval_pack/week7_norm_only/error_cases/*` | Implemented | Top FP/FN markdown export for each split. |
+| Ensemble/staking runtime detector | Not claimed in Ch3-Ch5 | 6.3 | `src/llm_jailbreak_detector/predict.py`, `src/llm_jailbreak_detector/cli.py` | Not present (by design) | System chooses one backend per invocation (`rules` or `lora`), no ensembling logic. |

@@ -1,7 +1,46 @@
-flowchart TB
-    CLI["CLI (jbd)"] --> P["Predictor"]
-    P --> N["Normalization"]
-    P --> RD["RulesDetector"]
-    P --> LD["LoraDetector"]
-    ES["Eval scripts"] --> RP["Reports / locked eval pack"]
-    N --> P
+flowchart LR
+    subgraph Runtime["Runtime Inference Path"]
+        CLI["CLI: jbd predict|batch|normalize|doctor<br/>src/llm_jailbreak_detector/cli.py"]
+        IO["Input/Output adapters<br/>src/llm_jailbreak_detector/io.py"]
+        P["Predictor orchestration<br/>src/llm_jailbreak_detector/predict.py"]
+        N1["Inference normalization wrapper<br/>src/llm_jailbreak_detector/normalize.py"]
+        N2["Unicode/category normalization core<br/>src/preprocess/normalize.py<br/>src/preprocess/unicode.py"]
+        IFACE["Detector selection: rules|lora"]
+        R["Rules detector<br/>src/llm_jailbreak_detector/rules_detector.py<br/>src/baselines/rules.py"]
+        L["LoRA detector<br/>src/llm_jailbreak_detector/lora_detector.py"]
+        C["Run config + threshold<br/>runs/*/config.json"]
+        M["Model artifacts<br/>runs/*/lora_adapter + local HF cache"]
+        O["Outputs<br/>stdout JSON / output JSONL"]
+    end
+
+    subgraph Eval["Evaluation and Reporting Path"]
+        T["Training<br/>scripts/train_lora.py"]
+        E1["Split eval<br/>scripts/eval_lora_from_run.py"]
+        E2["Grid eval<br/>scripts/eval_week7_grid.py"]
+        E3["Tables + error cases<br/>scripts/build_week7_tables.py<br/>scripts/dump_error_cases.py"]
+        E4["Locked pack<br/>scripts/lock_week7_eval_pack.py"]
+        REP["Reports<br/>reports/week7/locked_eval_pack/week7_norm_only/*"]
+    end
+
+    subgraph Config["Config + Data Sources"]
+        D["Datasets / split files<br/>data/v1*, data/v1_adv*, data/v1_adv2*, data/v1_rewrite*"]
+        SVC["Service/API layer"]
+    end
+
+    CLI --> IO --> P
+    CLI --> N1
+    N1 --> N2
+    P --> IFACE
+    IFACE --> R
+    IFACE --> L
+    L --> C
+    L --> M
+    P --> O
+    D --> IO
+
+    T --> E1 --> E2 --> E3 --> E4 --> REP
+    C --> E1
+    M --> E1
+    D --> E1
+
+    SVC -. "not implemented in current repo" .- CLI
