@@ -1,0 +1,321 @@
+% Chapter 4 — Experiments and Results
+\chapter{Experiments and Results}
+\label{ch:experiments}
+
+This chapter reports the Week-7 \textbf{locked evaluation pack} results for jailbreak and prompt-injection detection under a deployment-relevant constraint: a \textbf{very low false-positive operating point} calibrated on validation and \textbf{transferred unchanged} to evaluation splits. Unless explicitly stated otherwise, all numbers and plots in this chapter are taken from the Week-7 locked evaluation pack (\texttt{reports/week7/locked\_eval\_pack/week7\_norm\_only/}).
+
+A central theme of the results is the difference between \textbf{ranking quality} (AUROC/AUPRC) and \textbf{fixed-threshold behavior} (FPR/TPR/ASR) under distribution shift. In particular, some perturbations preserve high recall while causing catastrophic false-positive rates, which is a decisive practical failure mode for deployed guardrails.
+
+\section{Datasets and split grid}
+\label{sec:ch4_split_grid}
+
+Week-7 evaluation uses a fixed split grid: a validation split (\texttt{val}) for threshold calibration, two evaluation splits (\texttt{test\_main}, \texttt{test\_jbb}) for reporting, and three stress-test variant families (unicode/adv2/rewrite) applied to each evaluation split. The locked pack includes only \textbf{aggregate counts} (no raw prompts/ids). \textbf{Train is included for aggregate dataset statistics only; evaluation and thresholding use \texttt{val} plus the evaluation splits.}
+
+\begin{quote}
+\textbf{Naming note (validity).} Although these splits are named \texttt{test\_*} in the repository, they were inspected during Week-7 ablation and model selection (Section~\ref{sec:ch4_validity_isolation}). Accordingly, they should be interpreted as \textbf{development evaluation splits}, not a blind final test set. Section~\ref{sec:ch4_validity_isolation} states the implications and the recommended remedy (a blind holdout) for strict test isolation.
+\end{quote}
+
+\begin{table}[t]
+\centering
+\caption{Locked-pack split counts (aggregate only).}
+\label{tab:ch4_split_counts}
+\begin{tabular}{lrrr}
+\hline
+split & total & benign & attack \\
+\hline
+train & 201{,}276 & 14{,}859 & 186{,}417 \\
+val & 6{,}106 & 3{,}082 & 3{,}024 \\
+test\_main & 35{,}230 & 3{,}147 & 32{,}083 \\
+test\_jbb & 197 & 98 & 99 \\
+test\_main\_unicode & 35{,}230 & 3{,}147 & 32{,}083 \\
+test\_jbb\_unicode & 197 & 98 & 99 \\
+test\_main\_adv2 & 35{,}230 & 3{,}147 & 32{,}083 \\
+test\_jbb\_adv2 & 197 & 98 & 99 \\
+test\_main\_rewrite & 35{,}230 & 3{,}147 & 32{,}083 \\
+test\_jbb\_rewrite & 197 & 98 & 99 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Dataset composition, prevalence, and evaluation implications}
+\label{sec:ch4_prevalence}
+
+Table-level performance must be interpreted in light of class prevalence. The main evaluation split (\texttt{test\_main}) is \textbf{attack-heavy} (32{,}083 attacks vs.\ 3{,}147 benign; attack rate 0.9107), whereas \texttt{val} is approximately balanced (3{,}024 attacks vs.\ 3{,}082 benign; attack rate 0.4953). Because \textbf{AUPRC depends strongly on prevalence}, we report it for completeness but treat \textbf{operating-point metrics} (FPR/TPR at the transferred validation threshold) as the primary deployment-relevant indicators.
+
+To make false-positive harm legible, Table~\ref{tab:ch4_fp_per_1000} converts FPR into a product-relevant unit: \textbf{expected false positives per 1{,}000 benign inputs} at the transferred threshold $\tau$.
+
+\begin{table}[t]
+\centering
+\caption{Expected false positives per 1{,}000 benign inputs (at transferred $\tau$).}
+\label{tab:ch4_fp_per_1000}
+\begin{tabular}{lr}
+\hline
+split & FP per 1{,}000 benign (at transferred $\tau$) \\
+\hline
+val & 9.4 \\
+test\_main & 31.1 \\
+test\_main\_unicode & 42.9 \\
+test\_main\_rewrite & 53.1 \\
+test\_main\_adv2 & 640.3 \\
+test\_jbb & 581.6 \\
+test\_jbb\_unicode & 653.1 \\
+test\_jbb\_rewrite & 571.4 \\
+test\_jbb\_adv2 & 846.9 \\
+\hline
+\end{tabular}
+\end{table}
+
+In real deployments, benign traffic often dominates. Chapter~\ref{ch:robustness} therefore additionally reports \textbf{precision / PPV} at the operating point and reweighted operating-point summaries under benign-majority priors (e.g., 1--10\% attack rate), to avoid overly optimistic conclusions from attack-heavy evaluation.
+
+\section{Experimental setup and reproducibility hooks}
+\label{sec:ch4_repro}
+
+All results in this chapter are produced by a fixed Week-7 evaluation script (\texttt{scripts/eval\_week7\_grid.py}) and packaged by \texttt{scripts/lock\_week7\_eval\_pack.py}. The locked pack includes:
+\begin{itemize}
+  \item per-split aggregate metrics tables (ranking + fixed-threshold),
+  \item ROC curves and score histograms for selected splits,
+  \item a run configuration snapshot (including \texttt{val\_threshold} and preprocessing toggles),
+  \item aggregate dataset statistics, and
+  \item an environment summary (Python/package versions) for auditability.
+\end{itemize}
+
+Raw datasets and full training run directories are not included in the locked pack (Section~\ref{sec:ch4_repro_limits} discusses the reproducibility implications and recommended manifests).
+
+\section{Experimental design and model selection validity}
+\label{sec:ch4_design}
+
+Week-7 experiments follow a predeclared evaluation grid and a small ablation designed to isolate two training-time factors:
+\begin{itemize}
+  \item \texttt{normalize\_train} $\in \{\texttt{false}, \texttt{true}\}$
+  \item \texttt{aug\_adv2\_prob} $\in \{0.0, 0.25\}$ (with rewrite augmentation fixed to 0.0)
+\end{itemize}
+
+\subsection{Data access, selection protocol, and test isolation}
+\label{sec:ch4_validity_isolation}
+
+During Week-7 development, the ablation table (Table D in the locked pack) aggregates results over the \texttt{test\_main}/\texttt{test\_jbb} families (including their perturbation variants) and uses those outcomes to justify selecting \texttt{week7\_norm\_only} as the final run. This constitutes \textbf{test-set contamination} if these splits are treated as a blind final test.
+
+For strict experimental validity, there are two acceptable framings:
+\begin{enumerate}
+  \item \textbf{Minimum salvage (what this thesis adopts):} treat \texttt{test\_main}/\texttt{test\_jbb} as \textbf{development evaluation splits} used for selection; interpret results as potentially optimistic; avoid language that implies blind generalization.
+  \item \textbf{Best practice (recommended future work):} introduce a \textbf{blind final holdout} split that is never inspected during selection, and report ``final test'' numbers only once on that holdout.
+\end{enumerate}
+In the remainder of this chapter, we therefore refer to \texttt{test\_main}/\texttt{test\_jbb} as \textbf{evaluation} splits and scope claims accordingly.
+
+\section{Baselines}
+\label{sec:ch4_baselines}
+
+We report two baselines: a simple rules detector and the learned LoRA classifier (final locked run). Section~\ref{sec:ch4_repro_limits} notes the limitations of this baseline set and the recommended additions (TF--IDF + LR, small transformer fine-tune, and/or an LLM-judge baseline on a sampled subset).
+
+\subsection{Rules baseline (fixed-threshold heuristic)}
+\label{sec:ch4_rules_baseline}
+
+The rules baseline is evaluated at a fixed decision threshold \textbf{0.5} and does \textbf{not} use validation-threshold transfer. Overall, the rules baseline shows \textbf{minimal discriminative signal} (AUROC close to 0.5) and \textbf{near-zero recall} at its fixed threshold, indicating that the rule list rarely triggers on attacks in these corpora. It is therefore best interpreted as an ``always-available offline sanity baseline,'' not a competitive detector.
+
+\textbf{Governance note (baseline freeze).} The rules list is treated as frozen prior to Week-7 evaluation reporting; it is not tuned against the evaluation split grid.
+
+\subsection{Learned detector (Week-7 winner)}
+\label{sec:ch4_lora_winner}
+
+All main results below use the Week-7 selected run:
+\begin{itemize}
+  \item \textbf{Run id:} \texttt{week7\_norm\_only}
+  \item \textbf{Backbone:} \texttt{microsoft/deberta-v3-base} (\texttt{max\_length = 256})
+  \item \textbf{Text handling (winner):} \texttt{normalize\_train=true}, \texttt{normalize\_infer=false}, \texttt{unicode\_preprocess=false}, \texttt{normalize\_drop\_mn=false}
+  \item \textbf{Augmentation (winner):} disabled (\texttt{aug\_adv2\_prob=0.0}, \texttt{aug\_rewrite\_prob=0.0})
+  \item \textbf{Validation threshold:} \texttt{val\_threshold = 0.7340} (transferred unchanged to all evaluation splits)
+\end{itemize}
+
+\subsection{Proposal-compliance note on external guardrail comparison}
+\label{sec:ch4_proposal_alignment}
+
+The approved project proposal explicitly named comparison against existing guardrails (for example Llama Guard 2, Prompt Guard, ProtectAI-style detectors, plus a rules baseline) as a target deliverable. The final submission \textbf{does not present a reproducible benchmark against those external guardrails}. During the submission pass, the repository, local Python environment, and local Hugging Face cache were checked for a runnable local integration of those proposal-named systems, but no local packages, model artifacts, or cached backbones for them were available. Hosted API comparisons were also rejected because they would violate the offline-first and examiner-reproducible framing of this project.
+
+Accordingly, the final thesis narrows scope from a vendor-guardrail bakeoff to an \textbf{offline reproducible detector study}: a frozen rules baseline is compared against the learned LoRA detector under a locked threshold-transfer protocol, and the main contribution is the honest measurement of where that operating point fails under distribution shift. This narrowing should be treated as a proposal-deliverable reduction, not as evidence that external guardrail comparison was completed.
+\section{Main results (Week-7 locked pack)}
+\label{sec:ch4_main_results}
+
+For each table, ranking metrics (AUROC/AUPRC) summarize score separability, while operating-point metrics are computed at the \textbf{transferred validation threshold} $\tau$. Throughout, \textbf{ASR@$\tau$} is interpreted as the \textbf{attack false-negative rate} at $\tau$:
+\[
+\mathrm{ASR}@\tau = \mathrm{FNR}_{attack}@\tau = 1 - \mathrm{TPR}@\tau.
+\]
+
+\subsection{Clean + Unicode (Table A)}
+\label{sec:ch4_clean_unicode}
+
+\begin{table}[t]
+\centering
+\caption{\texttt{week7\_norm\_only} --- clean + unicode splits (threshold transferred from \texttt{val}).}
+\label{tab:ch4_tableA_clean_unicode}
+\begin{tabular}{lrrrrr}
+\hline
+split & AUROC & AUPRC & FPR@thr & TPR@thr & ASR@thr \\
+\hline
+val & 0.9983 & 0.9982 & 0.0094 & 0.9696 & 0.0304 \\
+test\_main & 0.9958 & 0.9996 & 0.0311 & 0.9869 & 0.0131 \\
+test\_jbb & 0.8890 & 0.8747 & 0.5816 & 0.9798 & 0.0202 \\
+test\_main\_unicode & 0.9949 & 0.9994 & 0.0429 & 0.9862 & 0.0138 \\
+test\_jbb\_unicode & 0.8814 & 0.8704 & 0.6531 & 0.9798 & 0.0202 \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Key observations.}
+\begin{itemize}
+  \item \textbf{Clean ranking quality is strong on \texttt{test\_main}.} AUROC $\approx 0.996$ and recall remains high at the transferred threshold (TPR $\approx 0.987$; ASR $\approx 0.013$).
+  \item \textbf{Operating-point transfer is imperfect even on clean text.} Although $\tau$ is chosen to satisfy a $\sim 1\%$ FPR constraint on \texttt{val} (FPR $\approx 0.0094$), the same $\tau$ yields higher FPR on \texttt{test\_main} ($\approx 0.0311$), illustrating distribution sensitivity of low-FPR calibration.
+  \item \textbf{Unicode shifts the operating point more than recall.} On \texttt{test\_main}, the unicode variant increases FPR ($\approx 0.0311 \rightarrow \approx 0.0429$) with essentially unchanged TPR ($\approx 0.9869 \rightarrow \approx 0.9862$).
+  \item \textbf{Cross-dataset shift dominates false positives on \texttt{test\_jbb}.} On \texttt{test\_jbb} and \texttt{test\_jbb\_unicode}, FPR is very high ($\approx 0.58$--$0.65$) despite high TPR, indicating that benign score distributions differ substantially from \texttt{val} and \texttt{test\_main}.
+\end{itemize}
+
+\paragraph{Small-$N$ warning (JBB).}
+\texttt{test\_jbb} contains only \textbf{98 benign} examples, so FPR is quantized (each additional false positive changes FPR by $\approx 1/98 \approx 1.02\%$). Consequently, JBB FPR should be treated as a stress signal rather than a precise estimate.
+
+\subsection{adv2 + Rewrite (Table B)}
+\label{sec:ch4_adv2_rewrite}
+
+\begin{table}[t]
+\centering
+\caption{\texttt{week7\_norm\_only} --- adv2 + rewrite variants (threshold transferred from \texttt{val}).}
+\label{tab:ch4_tableB_adv2_rewrite}
+\begin{tabular}{lrrrrr}
+\hline
+split & AUROC & AUPRC & FPR@thr & TPR@thr & ASR@thr \\
+\hline
+test\_main\_adv2 & 0.7133 & 0.9523 & 0.6403 & 0.9967 & 0.0033 \\
+test\_jbb\_adv2 & 0.6318 & 0.6294 & 0.8469 & 0.8990 & 0.1010 \\
+test\_main\_rewrite & 0.9942 & 0.9994 & 0.0531 & 0.9902 & 0.0098 \\
+test\_jbb\_rewrite & 0.8956 & 0.8964 & 0.5714 & 0.9899 & 0.0101 \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Key observations.}
+\begin{itemize}
+  \item \textbf{adv2 is the most stressful shift.} On \texttt{test\_main\_adv2}, AUROC drops sharply ($\approx 0.713$) and FPR inflates dramatically ($\approx 0.640$), while TPR remains very high ($\approx 0.997$). This ``AUROC down + FPR up + TPR high'' pattern is the central empirical signature of adv2 stress under threshold transfer.
+  \item \textbf{\texttt{test\_jbb\_adv2} is the hardest case.} Ranking metrics are low (AUROC $\approx 0.632$; AUPRC $\approx 0.629$), and the transferred threshold yields both very high FPR ($\approx 0.847$) and reduced TPR ($\approx 0.899$), resulting in ASR $\approx 0.101$.
+  \item \textbf{Rewrite is comparatively benign.} Rewrite variants preserve strong ranking quality (e.g., \texttt{test\_main\_rewrite} AUROC $\approx 0.994$), with modest FPR inflation ($\approx 0.053$) and low ASR.
+  \item \textbf{JBB shift persists under rewrite.} \texttt{test\_jbb\_rewrite} maintains high TPR ($\approx 0.990$) but exhibits high FPR ($\approx 0.571$), reinforcing that cross-dataset transfer (not just perturbation) is a dominant driver of false positives.
+\end{itemize}
+
+\subsection{Confusion-matrix counts at the transferred threshold}
+\label{sec:ch4_confusion_counts}
+
+To ground the rates above, Table~\ref{tab:ch4_confusion_counts} converts FPR/TPR into integer confusion-matrix counts (derived from the aggregate counts in Table~\ref{tab:ch4_split_counts}). These counts are especially useful on small splits like JBB.
+
+\begin{table}[t]
+\centering
+\caption{Confusion-matrix counts at $\tau$ (derived from aggregate counts).}
+\label{tab:ch4_confusion_counts}
+\begin{tabular}{lrrrrrr}
+\hline
+split & benign $n_0$ & attack $n_1$ & FP & TN & TP & FN \\
+\hline
+val & 3082 & 3024 & 29 & 3053 & 2932 & 92 \\
+test\_main & 3147 & 32083 & 98 & 3049 & 31663 & 420 \\
+test\_main\_unicode & 3147 & 32083 & 135 & 3012 & 31640 & 443 \\
+test\_main\_rewrite & 3147 & 32083 & 167 & 2980 & 31769 & 314 \\
+test\_main\_adv2 & 3147 & 32083 & 2015 & 1132 & 31977 & 106 \\
+test\_jbb & 98 & 99 & 57 & 41 & 97 & 2 \\
+test\_jbb\_unicode & 98 & 99 & 64 & 34 & 97 & 2 \\
+test\_jbb\_rewrite & 98 & 99 & 56 & 42 & 98 & 1 \\
+test\_jbb\_adv2 & 98 & 99 & 83 & 15 & 89 & 10 \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Robustness interpretation and failure modes}
+\label{sec:ch4_failure_modes}
+
+\subsection{Threshold transfer failures under adv2}
+\label{sec:ch4_adv2_fail}
+
+The fixed-threshold results show a clear failure mode: under adv2 perturbations, false-positive rates become unacceptably large. For example, at the transferred $\tau$, \texttt{week7\_norm\_only} yields FPR $\approx 0.640$ on \texttt{test\_main\_adv2} and $\approx 0.847$ on \texttt{test\_jbb\_adv2}. This means that, under this stress condition, the detector would block a majority of benign inputs (Table~\ref{tab:ch4_fp_per_1000}).
+
+Accordingly, claims are scoped narrowly:
+\begin{itemize}
+  \item Week-7 ``norm-only'' is selected as the \textbf{least harmful intervention among tested options}, not as a robust solution to adv2.
+  \item Robustness conclusions should be stated as ``robust to these transforms in ranking/recall,'' while acknowledging that \textbf{operating-point stability fails} under adv2 in the locked configuration.
+\end{itemize}
+
+\subsection{Threat mode clarity: attack-only vs both-sides perturbations}
+\label{sec:ch4_threat_modes}
+
+The adv2/rewrite variants in Table~\ref{tab:ch4_split_counts} preserve benign counts, implying that perturbations were applied to \textbf{both benign and attack examples} (a ``noisy channel'' stress test). This is a different threat model from ``adaptive attacker perturbs attacks only.'' Chapter~\ref{ch:robustness} therefore reports both modes:
+\begin{itemize}
+  \item \textbf{Attack-only perturbation:} measures attacker adaptation while holding the benign distribution fixed (more deployment-typical for FPR stability).
+  \item \textbf{Both-sides perturbation:} measures robustness under noisy input channels and copy/paste corruption (harsher benign shift).
+\end{itemize}
+
+\subsection{Mitigation direction: inference-time normalization and recalibration}
+\label{sec:ch4_mitigation}
+
+Because adv2 operates at the character level, inference-time canonicalization is a natural mitigation. The locked Week-7 configuration fixes \texttt{normalize\_infer=false}, so it does not evaluate this direct defense. Chapter~\ref{ch:robustness} therefore includes an ablation with \texttt{normalize\_infer} $\in \{\texttt{OFF}, \texttt{ON}\}$ under the same threshold-transfer protocol, and discusses the trade-off: inference normalization may reduce benign drift under obfuscation but can introduce language-specific distortion.
+
+\section{Uncertainty and statistical reliability}
+\label{sec:ch4_uncertainty}
+
+For thresholded metrics, uncertainty can be approximated as binomial variability on the relevant class subset (benign for FPR; attacks for TPR/ASR). Table~\ref{tab:ch4_wilson_ci} reports \textbf{Wilson 95\% confidence intervals} for operating-point rates. These intervals are narrow on large splits and wide on \texttt{test\_jbb} due to its small size.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Operating-point uncertainty (Wilson 95\% CIs).}
+\label{tab:ch4_wilson_ci}
+\begin{tabular}{l p{4.2cm} p{4.2cm} p{4.2cm}}
+\hline
+split & FPR@$\tau$ (95\% CI) & TPR@$\tau$ (95\% CI) & ASR@$\tau$ = FNR$_{attack}$ (95\% CI) \\
+\hline
+val & 0.0094 [0.0066, 0.0135] & 0.9696 [0.9628, 0.9751] & 0.0304 [0.0249, 0.0372] \\
+test\_main & 0.0311 [0.0256, 0.0378] & 0.9869 [0.9856, 0.9881] & 0.0131 [0.0119, 0.0144] \\
+test\_main\_unicode & 0.0429 [0.0364, 0.0506] & 0.9862 [0.9849, 0.9874] & 0.0138 [0.0126, 0.0151] \\
+test\_main\_rewrite & 0.0531 [0.0458, 0.0615] & 0.9902 [0.9891, 0.9912] & 0.0098 [0.0088, 0.0109] \\
+test\_main\_adv2 & 0.6403 [0.6234, 0.6569] & 0.9967 [0.9960, 0.9973] & 0.0033 [0.0027, 0.0040] \\
+test\_jbb & 0.5816 [0.4827, 0.6744] & 0.9798 [0.9293, 0.9944] & 0.0202 [0.0056, 0.0707] \\
+test\_jbb\_unicode & 0.6531 [0.5547, 0.7399] & 0.9798 [0.9293, 0.9944] & 0.0202 [0.0056, 0.0707] \\
+test\_jbb\_rewrite & 0.5714 [0.4726, 0.6649] & 0.9899 [0.9450, 0.9982] & 0.0101 [0.0018, 0.0550] \\
+test\_jbb\_adv2 & 0.8469 [0.7627, 0.9050] & 0.8990 [0.8240, 0.9442] & 0.1010 [0.0558, 0.1760] \\
+\hline
+\end{tabular}
+\end{table}
+
+For AUROC/AUPRC, confidence intervals require resampling over scores; the locked pack does not include per-example score vectors. Appendix X describes how to compute bootstrap CIs when cached scores are available.
+
+\section{Figures (locked pack) and recommended additions}
+\label{sec:ch4_figures}
+
+To visualize threshold-transfer behavior---especially under adv2---the locked pack includes ROC curves and score histograms for key splits, for example:
+\begin{itemize}
+  \item \texttt{roc\_week7\_norm\_only\_test\_main\_adv2.png}
+  \item \texttt{roc\_week7\_norm\_only\_test\_main\_rewrite.png}
+  \item \texttt{hist\_week7\_norm\_only\_test\_main\_adv2.png}
+\end{itemize}
+
+\textbf{Recommended additions for thesis clarity.} ROC curves hide prevalence and operating-point costs, so this chapter is strengthened by adding (i) \textbf{precision--recall curves} and (ii) an explicit marker for the transferred threshold $\tau$ on ROC/PR plots.
+
+% Optional figure placeholders (adjust paths to your repo):
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\linewidth]{figures/ch4/roc_week7_norm_only_test_main_adv2}
+  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_main\_adv2}.}
+  \label{fig:ch4_roc_main_adv2}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\linewidth]{figures/ch4/hist_week7_norm_only_test_main_adv2}
+  \caption{Score histogram for \texttt{week7\_norm\_only} on \texttt{test\_main\_adv2}.}
+  \label{fig:ch4_hist_main_adv2}
+\end{figure}
+
+\section{Reproducibility limitations and recommended artifacts}
+\label{sec:ch4_repro_limits}
+
+The locked evaluation pack supports verification of the reported numbers and plots, but it does not, by itself, permit full third-party reproduction because raw datasets and training runs are not committed. To meet examiner expectations, the repository should include:
+\begin{itemize}
+  \item \texttt{DATA\_MANIFEST.md} (sources, licenses, access instructions, hashes, schema),
+  \item \texttt{docs/REPRO.md} (commands to reproduce evaluation from cached scores or a small public subset),
+  \item compute reporting (GPU type, wall-clock time, seeds), ideally copied from the locked pack’s environment summary.
+\end{itemize}
+
+These artifacts do not require distributing raw prompts, but they substantially improve auditability.

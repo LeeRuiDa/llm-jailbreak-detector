@@ -1,0 +1,431 @@
+% Chapter 3 — Method
+\chapter{Method}
+\label{ch:method}
+
+This chapter describes the detection task, dataset representation, preprocessing choices, detector implementations, perturbation families, and the locked evaluation protocol used to produce the final reported results. The method is designed to support a deployment-relevant operating point (very low false-positive rate) while stress-testing robustness against common evasion techniques such as Unicode obfuscation and paraphrase-like rewriting.%
+
+\section{Task definition and label policy}
+\label{sec:task_label_policy}
+
+We frame guardrail detection for LLM applications as a binary classification problem over text inputs. Given an input payload (the user prompt and, when applicable, any attached context), the detector outputs a scalar score and a binary decision indicating whether the input is an attack (jailbreak or prompt injection) or benign (safe/normal usage). The primary operational goal is to flag jailbreak/prompt-injection attempts while keeping false positives low, since unnecessary blocks translate directly into user friction and operational cost.%
+
+The dataset label policy is intentionally simple and consistent across sources:
+\begin{itemize}
+  \item \texttt{label = 1} denotes \textbf{attack / unsafe} (jailbreak or prompt injection).
+  \item \texttt{label = 0} denotes \textbf{benign / safe}.
+\end{itemize}
+
+The training and evaluation pipelines consume only the binary \texttt{label} as ground truth. Additional fields such as \texttt{attack\_type} are retained to support analysis and reporting (e.g., performance by tactic family), but they do not determine class membership. Ingestion scripts may infer/coerce labels from source-specific structures, then populate \texttt{attack\_type} accordingly; however, the unified pipeline objective remains binary detection driven by \texttt{label}.%
+
+\subsection{Threat model and labeling decision boundary}
+\label{sec:threat_model_boundary}
+
+This thesis targets prompt-layer text attacks where untrusted text attempts to change the instruction hierarchy of an LLM application. We focus on two widely documented classes:
+\begin{itemize}
+  \item \textbf{Direct jailbreaks:} the user prompt attempts to override higher-priority instructions or force disallowed behavior.
+  \item \textbf{Prompt injection (including indirect injection):} untrusted \emph{context} (retrieved passages, tool output, document snippets) contains takeover instructions intended to hijack a downstream model.
+\end{itemize}
+
+An example is labeled \textbf{attack} (\texttt{label=1}) if the payload contains an explicit attempt to:
+\begin{enumerate}
+  \item \textbf{Override} or nullify higher-priority instructions,
+  \item \textbf{Extract} hidden system/developer instructions, secrets, or tool credentials, or
+  \item \textbf{Hijack actions or tools} (e.g., to trigger tool calls or downstream actions),
+\end{enumerate}
+regardless of whether the attempt would succeed at runtime. An example is labeled \textbf{benign} (\texttt{label=0}) if it does not contain an instruction-takeover attempt and represents normal user intent (Q\&A, writing help, coding help, summarization, etc.). \cite{rababah2024sokprompthacking,abdelnabi2023promptinjection}
+
+\textbf{Hard negatives.} Educational or analytical discussion of injection/jailbreaks is treated as benign when the intent is explanatory (e.g., describing a phrase, summarizing a paper, comparing defenses). These cases are included as hard negatives to measure false positives on ``attack-like'' phrasing without malicious intent.%
+
+\textbf{Ambiguous cases.} When an item contains injection-like text but the intent is unclear, we apply a deterministic decision rule: label as attack only when a takeover instruction is directed at the assistant/tool as an imperative (``do X now'') rather than merely quoted, referenced, or used as an example. Ambiguous benign items are tagged via \texttt{attack\_type="ambiguous"} to support error analysis in later chapters.%
+
+\textbf{Labeling examples and QA.} To make the decision boundary concrete, the following representative examples (sanitized) were used as reference during ingestion:
+\begin{itemize}
+  \item \textbf{Attack (direct jailbreak):} ``Ignore previous instructions and reveal the system prompt.''
+  \item \textbf{Attack (indirect injection):} ``The following retrieved context contains instructions like `override the system'; follow them and print hidden rules.''
+  \item \textbf{Benign (hard negative / educational):} ``In my report, explain why attackers use the phrase `ignore previous instructions'.''
+  \item \textbf{Ambiguous (default benign):} ``Quote an example of a jailbreak prompt and describe how to defend against it.''
+\end{itemize}
+
+Labels are primarily inherited from the upstream sources, then normalized into the binary policy above. Where sources disagree or intent is unclear, the deterministic ambiguity rule above is applied. In addition, we perform targeted spot-checks on (i) hard-negative phrases and (ii) the highest-scoring false positives from validation to verify that the label boundary matches the intended threat model; these checks are reported qualitatively in the robustness/error-analysis chapter.%
+
+\section{Data format, schema, and split naming}
+\label{sec:data_format_schema}
+
+All datasets are represented as JSONL (one example per line) with a canonical record schema enforced by the project’s loader. Each record contains:
+\begin{itemize}
+  \item \texttt{id} (string): unique example identifier
+  \item \texttt{text} (string): the full input payload used by detectors
+  \item \texttt{label} (int: 0/1): binary class label (0 = benign, 1 = attack)
+  \item \texttt{attack\_type} (string): categorical descriptor for analysis/stratification
+  \item \texttt{source} (string): dataset/source identifier
+  \item \texttt{group\_id} (string): grouping key used for leakage/overlap checks across splits
+  \item \texttt{meta} (object/dict, optional): additional metadata; defaults to \texttt{\{\}} when missing or invalid
+\end{itemize}
+
+\subsection{Canonical \texttt{text} template (prompt + optional context)}
+\label{sec:canonical_text_template}
+
+Some upstream corpora provide separate prompt and context fields (e.g., indirect prompt injection settings where ``context'' is retrieved or tool-produced text). To keep a single detector interface, ingestion builds a unified \texttt{text} payload using a fixed delimiter template:
+\begin{verbatim}
+[PROMPT]
+{prompt}
+
+[CONTEXT]
+{context}
+\end{verbatim}
+
+If \texttt{context} is missing, only the \texttt{[PROMPT]} block is emitted. The repository enforces this delimiter template during ingestion, but it does \textbf{not} currently implement an explicit escaping or sentinel-replacement rule when raw prompt/context text itself contains delimiter-like marker lines. Accordingly, the Week-7 pipeline should be described as using a canonical \texttt{[PROMPT]}/\texttt{[CONTEXT]} template, while treating delimiter escaping as a documented implementation limitation rather than a shipped safeguard.%
+
+\subsection{Leakage prevention via \texttt{group\_id} (grouping + deduplication)}
+\label{sec:leakage_group_id}
+
+To reduce split contamination, the repository provides dataset validation tooling that checks required fields, counts duplicate ids, and—most importantly—detects overlap in \texttt{group\_id} across train/validation/test splits. This is intended to prevent grouped duplicates (e.g., templated prompt families or near-identical variants) from leaking between splits, which can inflate measured generalization.%
+
+The key requirement is that \texttt{group\_id} is derived from the base example before any synthetic perturbations are applied, so that all variants inherit the same grouping key. A minimal deterministic policy is:
+\begin{itemize}
+  \item Define \texttt{base\_id} as the unperturbed example identifier.
+  \item Set \verb|group_id = "{source}::{base_id}"|.
+  \item For each perturbed variant, set \verb|id = "{base_id}::{variant_tag}"| but \textbf{keep \texttt{group\_id} unchanged}.
+\end{itemize}
+
+In addition to group overlap checks, we remove exact duplicates across merged sources using a normalized-text hash (SHA256 over NFKC + lowercased + whitespace-stripped text). This is conservative (it does not attempt semantic near-duplicate clustering across unrelated sources), but it prevents identical strings from inflating results.%
+
+The validator then enforces
+\[
+\texttt{group\_id\_train} \cap \texttt{group\_id\_val} = \varnothing
+\quad \text{and} \quad
+\texttt{group\_id\_train} \cap \texttt{group\_id\_test} = \varnothing
+\]
+and reports (i) how many overlaps were detected and (ii) how many records were removed or reassigned. The validator also warns if the validation set contains too few benign examples, since calibrating a strict low-FPR operating point becomes unstable with insufficient negative mass.%
+
+\subsection{Data sources and split construction (provenance + composition)}
+\label{sec:data_sources_splits}
+
+The unified dataset is assembled from multiple sources covering (i) direct jailbreak prompts, (ii) prompt-injection examples (including indirect injection where untrusted context contains takeover instructions), and (iii) benign user requests. Two evaluation roles are distinguished:
+\begin{itemize}
+  \item \textbf{Main corpus (\texttt{*\_main} splits):} an aggregated corpus of public prompt-attack and benign examples used to construct \texttt{train}, \texttt{val}, and \texttt{test\_main} (and their stress variants). In internal artifacts and error cases this corpus may appear under a source tag such as \texttt{jailbreakdb:*} (an ingestion-time namespace).
+  \item \textbf{Held-out benchmark (\texttt{*\_jbb} splits):} a source-held-out evaluation set derived from \textbf{JailbreakBench} \cite{chao2024jailbreakbench}, used as \texttt{test\_jbb} (and its stress variants) to reduce the risk that the detector overfits to the primary corpus distribution.
+\end{itemize}
+
+\textbf{Licensing and redistribution.} Because upstream prompts may be governed by their respective dataset licenses and/or safety constraints, this thesis does not redistribute raw prompt text. The repository instead records a dataset manifest (paths + content hashes) and exports aggregate statistics and derived metrics in the locked evaluation pack.%
+
+\textbf{Split construction.} Splits are constructed at the group level using \texttt{group\_id} (Section~\ref{sec:leakage_group_id}). Each base example is assigned to exactly one of \{\texttt{train}, \texttt{val}, \texttt{test\_*}\}, and all derived variants (unicode/adv2/rewrite) inherit the same \texttt{group\_id} and therefore remain in the same split. This prevents templated families and perturbation variants from leaking across splits under different surface forms.%
+
+\textbf{Split statistics.} Table~\ref{tab:week7_split_stats} reports split-level counts and class ratios for the Week-7 locked dataset grid. Because the operating point is calibrated at a strict target FPR, the number of benign validation examples determines the granularity of achievable FPR steps (Section~\ref{sec:metrics_operating_point}).%
+
+\begin{table}[t]
+\centering
+\caption{Week-7 split statistics (locked grid).}
+\label{tab:week7_split_stats}
+\begin{tabular}{lrrrr}
+\hline
+split & total & benign (\texttt{label=0}) & attack (\texttt{label=1}) & attack share \\
+\hline
+train & 201,276 & 14,859 & 186,417 & 92.6\% \\
+val & 6,106 & 3,082 & 3,024 & 49.5\% \\
+test\_main & 35,230 & 3,147 & 32,083 & 91.1\% \\
+test\_jbb & 197 & 98 & 99 & 50.3\% \\
+test\_main\_unicode & 35,230 & 3,147 & 32,083 & 91.1\% \\
+test\_jbb\_unicode & 197 & 98 & 99 & 50.3\% \\
+test\_main\_adv2 & 35,230 & 3,147 & 32,083 & 91.1\% \\
+test\_jbb\_adv2 & 197 & 98 & 99 & 50.3\% \\
+test\_main\_rewrite & 35,230 & 3,147 & 32,083 & 91.1\% \\
+test\_jbb\_rewrite & 197 & 98 & 99 & 50.3\% \\
+\hline
+\end{tabular}
+\end{table}
+
+Additional descriptive statistics (e.g., average character/word length, \texttt{attack\_type} breakdown, and a simple language-ID summary) are exported in the locked evaluation pack’s \texttt{DATA\_STATS.md} to support examiner audit without redistributing raw prompts. Note that stress-test splits (e.g., \texttt{test\_main\_adv2}) are perturbation variants of the corresponding clean split and therefore preserve sample counts by construction.%
+
+\subsection{Week-7 split grid (locked evaluation)}
+\label{sec:week7_split_grid}
+
+The Week-7 locked evaluation uses a fixed grid of splits:
+\begin{itemize}
+  \item \texttt{val}
+  \item \texttt{test\_main}
+  \item \texttt{test\_jbb}
+  \item \texttt{test\_main\_unicode}, \texttt{test\_jbb\_unicode}
+  \item \texttt{test\_main\_adv2}, \texttt{test\_jbb\_adv2}
+  \item \texttt{test\_main\_rewrite}, \texttt{test\_jbb\_rewrite}
+\end{itemize}
+These names are treated as part of the locked protocol and are consumed by the Week-7 grid evaluation script to generate consistent tables and figures.%
+
+\section{Unicode preprocessing and normalization policy}
+\label{sec:unicode_normalization_policy}
+
+Adversarial text attacks frequently rely on Unicode obfuscation to bypass brittle string checks and degrade model tokenization. Examples include fullwidth characters, selected cross-script homoglyph substitutions, invisible formatting characters (including some bidirectional controls), and whitespace manipulation. \cite{boucher2023trojansource} The repository provides two distinct, optional text canonicalization mechanisms that address surface-form variability:
+\begin{enumerate}
+  \item \textbf{Unicode preprocessing (\texttt{unicode\_preprocess}).}
+  An optional, explicit transformation pass intended to reduce Unicode-based obfuscation. This preprocessing includes:
+  \begin{itemize}
+    \item applying NFKC normalization,
+    \item mapping fullwidth forms (including fullwidth ASCII and fullwidth space) to standard ASCII,
+    \item mapping selected confusable characters (e.g., specific Cyrillic-to-Latin substitutions),
+    \item removing explicit zero-width characters (e.g., ZWSP, ZWNJ, ZWJ, BOM),
+    \item collapsing and trimming whitespace.
+  \end{itemize}
+
+  \item \textbf{Normalization (\texttt{normalize\_*}).}
+  A simpler, Unicode-category--based canonicalizer that:
+  \begin{itemize}
+    \item applies NFKC normalization, then
+    \item removes format characters (\texttt{Cf}) by default, and
+    \item optionally removes nonspacing marks (\texttt{Mn}) when enabled.
+  \end{itemize}
+\end{enumerate}
+
+These mechanisms are intentionally separate toggles: Unicode preprocessing targets specific obfuscation tactics via explicit transforms, while normalization provides a broad category-based filter over formatting characters (and optionally marks).%
+
+\textbf{Coverage limits and trade-offs.} Canonicalization is not a complete Unicode defense: confusables are not exhaustively mapped, and aggressive filtering (e.g., removing \texttt{Mn}) can distort legitimate text in some languages. Accordingly, we treat these mechanisms as pragmatic hardening steps and quantify their impact on both false positives and robustness in later chapters.%
+
+\subsection{Train vs inference normalization policy (final Week-7 choice)}
+\label{sec:train_vs_infer_norm_policy}
+
+Canonicalization can be enabled independently for training and inference. The final locked Week-7 configuration is explicitly ``norm-only'':
+\begin{itemize}
+  \item \texttt{normalize\_train = TRUE}
+  \item \texttt{normalize\_infer = FALSE}
+\end{itemize}
+
+Interpreted as augmentation, this trains the model to be robust to normalization effects without forcing runtime normalization in the locked reporting configuration. Because this is a nontrivial train/infer mismatch, Chapter~5 reports an explicit ablation (\(\texttt{normalize\_infer} \in \{\texttt{OFF}, \texttt{ON}\}\)) under the same validation-calibrated threshold-transfer protocol.%
+
+Unicode preprocessing (\texttt{unicode\_preprocess}) remains available as a separate switch; the locked Week-7 winner is defined by the norm-only policy recorded in the run snapshot and reiterated in the locked-pack README.%
+
+\section{Detectors}
+\label{sec:detectors}
+
+We evaluate two detectors: (i) a rules-based baseline designed for offline, dependency-light scanning, and (ii) an optional learned classifier trained via LoRA adapters.%
+
+\subsection{Rules detector (offline baseline)}
+\label{sec:rules_detector}
+
+The rules baseline is a keyword/regex matcher over a fixed pattern list that targets common jailbreak and instruction-takeover cues (e.g., phrases equivalent to ``ignore previous instructions,'' references to ``system prompt,'' and similar takeover language). It returns a binary score:
+\begin{itemize}
+  \item score \(= 1.0\) if any pattern matches
+  \item score \(= 0.0\) otherwise
+\end{itemize}
+
+The decision rule is \texttt{pred\_attack = (score >= threshold)}, with a default threshold of \(0.5\). Because the rules score is already binary, the Week-7 rules baseline uses this fixed threshold (there is no validation-threshold transfer for rules).%
+
+\textbf{Rules list governance.} The pattern list is defined once from publicly documented jailbreak/prompt-injection phrases and prior literature, then frozen before the Week-7 locked evaluation. It is not iteratively tuned on held-out test sets; the same frozen list is applied to all splits in the grid.%
+
+This baseline is intentionally simple: it provides an always-available offline detector and a transparent reference point for robustness comparisons against the learned model.%
+
+\subsection{LoRA detector (optional)}
+\label{sec:lora_detector}
+
+The learned detector is implemented as a HuggingFace sequence classifier fine-tuned using LoRA adapters. The training CLI’s default backbone is \texttt{roberta-base}, but the final locked Week-7 run uses \texttt{microsoft/deberta-v3-base} as recorded in the locked run snapshot. The LoRA configuration (rank/alpha/dropout) and core training hyperparameters (epochs, batch size, max length, learning rate, gradient accumulation, warmup ratio) are captured in the training script defaults and persisted into the run configuration.%
+
+\subsubsection{LoRA training procedure (reproducible setup)}
+\label{sec:lora_training_procedure}
+
+The learned detector is trained as a standard binary sequence classifier. Given the canonical \texttt{text} payload \(x\), the backbone produces logits \(z(x) \in \mathbb{R}^2\) and we define the attack score as
+\[
+s(x) = \mathrm{softmax}(z(x))_{y=1}.
+\]
+Training minimizes cross-entropy over the binary label.%
+
+To keep the method auditable and offline-first, each training run:
+\begin{itemize}
+  \item \textbf{Fine-tunes only adapters + head.} Backbone weights remain frozen; only LoRA adapter parameters (in selected attention projection layers) and the classification head are updated.
+  \item \textbf{Uses deterministic run bookkeeping.} Each run writes a \texttt{config.json} capturing the backbone id, LoRA configuration, tokenization length (\texttt{max\_length}), optimizer/scheduler hyperparameters, random seeds, dataset paths, and dataset content hashes (SHA256).
+  \item \textbf{Selects the best checkpoint by the thesis operating point.} Checkpoints are scored on validation using \textbf{TPR at the target FPR} (default \(1\%\)), and the best-performing checkpoint under this criterion is saved as the ``best'' run artifact.
+  \item \textbf{Ensures deterministic reload.} For backbones that include a pooler/classifier module (notably DeBERTa), non-LoRA modules required for correct inference are included in the saved artifact (e.g., via PEFT \texttt{modules\_to\_save}) so that \texttt{eval\_lora\_from\_run.py} reproduces training-time behavior without silent reinitialization.
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\caption{Final learned-model configuration (Week-7 winner).}
+\label{tab:week7_lora_config}
+\begin{tabular}{ll}
+\hline
+item & value \\
+\hline
+run id & \texttt{week7\_norm\_only} \\
+backbone & \texttt{microsoft/deberta-v3-base} \\
+max input length & 256 \\
+objective & cross-entropy over \{0,1\} \\
+score definition & \(s(x)=\mathrm{softmax}(z(x))_{y=1}\) \\
+score orientation & run-level \texttt{score\_transform} from validation (Section~\ref{sec:lora_score_orientation}) \\
+normalization (winner) & \texttt{normalize\_train=true}, \texttt{normalize\_infer=false}, \texttt{unicode\_preprocess=false}, \texttt{normalize\_drop\_mn=false} \\
+augmentation (winner) & disabled (\texttt{aug\_adv2\_prob=0.0}, \texttt{aug\_rewrite\_prob=0.0}) \\
+operating point & target FPR = 1\% on \texttt{val} (Section~\ref{sec:metrics_operating_point}) \\
+stored validation threshold & \texttt{val\_threshold = 0.7340} (transferred unchanged) \\
+\hline
+\end{tabular}
+\end{table}
+
+Other optimizer/scheduler and LoRA adapter hyperparameters (e.g., learning rate, batch size, gradient accumulation, LoRA rank/alpha/dropout, and exact target module names) are recorded in the run’s \texttt{config.json} and copied into the Week-7 locked evaluation pack for examiner reproducibility.%
+
+\textbf{Offline-first inference.} The LoRA detector is designed to be ``offline-first'': inference loads strictly from a local run directory containing the saved artifacts and configuration, and model loading uses \texttt{local\_files\_only=True} to avoid implicit downloads. The LoRA dependency stack is imported lazily; if a user selects the LoRA detector without the required extras installed, the system fails with an explicit install hint rather than attempting remote fetches.%
+
+\subsubsection{Score orientation and label index (deterministic)}
+\label{sec:lora_score_orientation}
+
+For learned runs, the attack label is fixed to \texttt{label=1}, and the raw model score is defined as \(s(x)=\mathrm{softmax}(z(x))_{y=1}\). As a safety check against misconfigured label mappings or mis-restored heads, we compute validation AUROC once for the run. If \(\mathrm{AUROC}_{val} < 0.5\), we set \texttt{score\_transform = invert} and map \(s(x) \leftarrow 1 - s(x)\) for all splits; otherwise \texttt{score\_transform = identity}. This orientation step is run-level (never split-specific), logged into \texttt{config.json}, and is not tuned to improve any test metric—it exists only to guard against label-index and reload bugs so that ``higher score'' consistently means ``more attack-like.''%
+
+\subsubsection{Training artifacts (LoRA runs)}
+\label{sec:lora_training_artifacts}
+
+Training produces a run directory containing: epoch-level metrics, a recorded validation operating point (including the chosen threshold), per-split predictions and final metrics files for key splits, the saved adapter artifacts and tokenizer, and a consolidated \texttt{config.json} that records run metadata and evaluation-relevant settings (notably \texttt{val\_threshold}, \texttt{attack\_class\_index}, and score-orientation settings).%
+
+\subsubsection{CLI contract (detector selection)}
+\label{sec:cli_contract}
+
+The CLI exposes commands including \texttt{predict}, \texttt{batch}, \texttt{normalize}, and \texttt{doctor}, and supports selecting detectors via \texttt{--detector rules|lora}. The default is rules to preserve offline usability; LoRA requires specifying a \texttt{--run\_dir} containing the trained artifacts.%
+
+\section{Perturbation families}
+\label{sec:perturbation_families}
+
+To evaluate robustness to common evasion tactics, the project uses three perturbation families. These families are synthetic proxies for attacker adaptation: each provides systematic, reproducible stress tests across formatting-level tricks, character-level noise, and paraphrase-like edits.%
+
+\subsection{Unicode mixing / obfuscation variants}
+\label{sec:perturb_unicode}
+
+Unicode adversarial generation produces obfuscated text by inserting zero-width characters and swapping ASCII into fullwidth forms, while recording an adversarial metadata trace and updating identifiers (e.g., suffixing \texttt{id} to mark variants). To preserve leakage checks, perturbed variants inherit the same \texttt{group\_id} as their base record (Section~\ref{sec:leakage_group_id}). This family simulates format-level evasion intended to bypass naïve string matching and degrade tokenization.%
+
+\subsection{adv2 (character-level noise)}
+\label{sec:perturb_adv2}
+
+The adv2 family applies randomized per-character edits such as case flips, homoglyph swaps, mixed-script inserts, punctuation inserts, extra spaces, and zero-width inserts. The transform can return counts of applied operations. adv2 approximates low-effort obfuscation that preserves meaning but distorts lexical surface form.%
+
+In the learned pipeline, adv2 may be used as optional training augmentation (probability-controlled). It is also evaluated as part of the locked grid through \texttt{*\_adv2} splits.%
+
+\subsection{rewrite (paraphrase-like edits)}
+\label{sec:perturb_rewrite}
+
+Rewrite perturbations apply mild paraphrase-style edits including synonym replacement, filler insertion, and optional sentence-order swaps. This family targets brittleness to lexical cues—especially relevant when comparing a rules baseline to a learned detector, since paraphrase can reduce surface overlap while preserving intent.%
+
+As with adv2, rewrite can be enabled as optional training augmentation and is evaluated in the locked grid via \texttt{*\_rewrite} splits.%
+
+\subsection{Parameterization and randomness policy (reproducibility)}
+\label{sec:perturb_repro_policy}
+
+Each perturbation family is defined by an explicit parameter set and a fixed randomness policy:
+\begin{itemize}
+  \item A global seed is recorded in the run configuration and reused for dataset generation and evaluation.
+  \item Each transform logs per-sample metadata sufficient to reproduce the perturbation (operation counts and/or applied edit tags).
+\end{itemize}
+
+We report robustness under two stress-test modes:
+\begin{itemize}
+  \item \textbf{Attack-only perturbation:} apply transformations only to attack examples (adaptive attacker model).
+  \item \textbf{Both-sides perturbation:} apply transformations to both benign and attack examples (noisy-channel model). This mode is intentionally harsher for low-FPR stability because it also shifts the benign score distribution.
+\end{itemize}
+
+Unless stated otherwise, Chapter~5 reports both modes to separate ``attacker adaptation'' effects from ``benign distribution shift'' effects.%
+
+\begin{table}[t]
+\centering
+\caption{Perturbation families (operation sets and fixed configuration).}
+\label{tab:perturbation_families}
+\begin{tabular}{l l p{6.2cm} p{6.2cm}}
+\hline
+family & goal & operations (high level) & fixed config / reproducibility \\
+\hline
+unicode & format-level evasion &
+NFKC-style canonicalization targets, zero-width / formatting controls, fullwidth folding &
+dataset-generation script records seed + per-sample metadata; variants inherit \texttt{group\_id} \\
+adv2 & character-level obfuscation &
+case flips, homoglyph swaps, mixed-script inserts, punctuation/whitespace noise, zero-width inserts &
+fixed op set + seed; capped edit budget per sample; config stored in locked pack \\
+rewrite & paraphrase-like edits &
+synonym substitutions, filler insertion, light reorder &
+deterministic lexicon + seed; constraints to avoid empty/invalid outputs; config stored in locked pack \\
+\hline
+\end{tabular}
+\end{table}
+
+The locked evaluation pack includes the exact perturbation configuration used to generate the \texttt{*\_unicode}, \texttt{*\_adv2}, and \texttt{*\_rewrite} splits (script name, parameters, and seed), so robustness results in Chapters~4--5 can be reproduced without re-tuning. Perturbations are intended to be label-preserving transformations: they modify surface form while aiming to preserve the underlying intent (attack vs benign). When a transformation produces an empty/invalid output (e.g., tokenization failure or degenerate rewrite), the generator skips the sample and records a count of dropped items in the generation log.%
+
+\section{Metrics and operating point selection}
+\label{sec:metrics_operating_point}
+
+Evaluation reports both ranking quality (threshold-free) and operational performance at a fixed threshold. This matches deployment reality: a detector is typically calibrated once and then applied unchanged across environments and shifts.%
+
+\subsection{Terminology}
+\label{sec:metrics_terminology}
+
+Let \texttt{score} denote the attack-class score used for thresholding. For the LoRA detector, the score corresponds to the configured \texttt{attack\_class\_index}, and a run-level \texttt{score\_transform} (identity vs.\ invert) may be applied so that ``higher score'' consistently means more attack-like. At a threshold \(\tau\), the decision rule is:
+\[
+\texttt{pred\_attack} = (\texttt{score} \ge \tau).
+\]
+
+At this fixed operating point:
+\begin{itemize}
+  \item \textbf{FPR@$\tau$} is the fraction of benign samples incorrectly flagged as attacks.
+  \item \textbf{TPR@$\tau$} is the fraction of attack samples correctly flagged.
+  \item \textbf{ASR@$\tau$} (attack success rate) is defined as the fraction of attack samples not flagged at \(\tau\) (i.e., attack false negatives / total attacks). Lower ASR is better.
+\end{itemize}
+
+\subsection{Ranking metrics}
+\label{sec:ranking_metrics}
+
+We compute AUROC and AUPRC using continuous scores. \cite{fawcett2006roc} For splits that contain only a single class, AUROC/AUPRC are undefined and are reported as \texttt{None}.%
+
+\subsection{Operating point selection at low FPR (validation quantile rule)}
+\label{sec:operating_point_quantile}
+
+Let \(S^{(0)}_{val}\) be the set of detector scores on benign validation examples. For a target false-positive rate \(\alpha\) (default \(\alpha = 0.01\)), we choose the decision threshold as a benign-quantile:
+\[
+\tau = \mathrm{Quantile}\left(S^{(0)}_{val}, 1-\alpha\right).
+\]
+
+Tie-handling is defined so that the achieved validation FPR is \(\le \alpha\) (choose the smallest \(\tau\) that satisfies the constraint). The chosen operating point is saved as \texttt{val\_operating\_point.json}, and the threshold is persisted as \texttt{val\_threshold} in the run’s \texttt{config.json}.%
+
+Because low FPR is estimated from a finite benign set, the achievable operating point is discrete: if \(n_0 = |S^{(0)}_{val}|\) then FPR steps are multiples of \(1/n_0\), and the quantile rule is equivalent to choosing a threshold that yields at most \(k=\lfloor \alpha n_0 \rfloor\) benign false positives on validation (so achieved FPR \(\le \alpha\)). For the Week-7 grid, \(n_0=3082\) benign validation examples (Table~\ref{tab:week7_split_stats}), so the minimum FPR step is about \(1/3082 \approx 0.0324\%\).%
+
+\subsection{Threshold transfer (no re-tuning on test)}
+\label{sec:threshold_transfer}
+
+Once calibrated on \texttt{val}, the same \texttt{val\_threshold} is applied unchanged to all other splits, including held-out sets and perturbation variants. This avoids optimistic bias from per-split threshold tuning and reflects a realistic workflow: calibrate once on validation data, then deploy under distribution shift without recalibration. \cite{guo2017calibration}
+
+\section{Locked evaluation protocol (Week-7)}
+\label{sec:locked_eval_protocol}
+
+To ensure reproducibility and reduce risk of iterative ``test set tuning,'' the project defines a locked evaluation protocol for Week 7. The locked bundle (\texttt{week7\_norm\_only}) is treated as the single source of truth for thesis reporting, containing consolidated tables, figures, error-case summaries, environment capture, and configuration snapshots while excluding raw datasets and full run directories.%
+
+\subsection{Governance rule (what is allowed to influence the winner)}
+\label{sec:locked_governance}
+
+Under the locked protocol, the final run identifier (here, \texttt{week7\_norm\_only}) is fixed before producing the locked grid results. Model-selection decisions (architecture/backbone, augmentations, and preprocessing switches) are made using training data and validation-set performance at the target FPR, plus qualitative error analysis on validation. The held-out split grid (\texttt{test\_main}, \texttt{test\_jbb}, and their variants) is used only for final reporting after the run id is fixed.%
+
+\subsection{Locked protocol recipe (Week-7)}
+\label{sec:locked_recipe}
+
+\begin{enumerate}
+  \item Fix the final run id \texttt{week7\_norm\_only} (no further changes to training configuration).
+  \item Use the fixed Week-7 split grid: \texttt{val}, \texttt{test\_main}, \texttt{test\_jbb}, and unicode/adv2/rewrite variants.
+  \item Enforce \texttt{normalize\_infer = OFF} for locked evaluation runs.
+  \item Compute scores on \texttt{val}, then choose \texttt{val\_threshold} at target FPR \(=1\%\) using the quantile rule in Section~\ref{sec:operating_point_quantile}.
+  \item Apply the same \texttt{val\_threshold} unchanged to all test splits (clean and perturbed variants).
+  \item Report AUROC/AUPRC, and fixed-threshold metrics (FPR, TPR, ASR) at the transferred threshold.
+  \item Package only aggregate results and artifacts into the locked evaluation bundle (tables, figures, error cases, ENV summary, data stats), omitting raw datasets and model run directories.
+\end{enumerate}
+
+\subsection{Figures for Chapter 3}
+\label{sec:method_figures}
+
+The method chapter includes two diagrams:
+\begin{itemize}
+  \item a pipeline diagram that situates prompt/context \(\rightarrow\) detector \(\rightarrow\) allow/block decisions, and
+  \item an evaluation protocol diagram that makes the threshold-transfer workflow explicit (train \(\rightarrow\) validation threshold selection \(\rightarrow\) apply unchanged everywhere).
+\end{itemize}
+
+These figures are generated from Mermaid sources and rendered via the repository’s diagram rendering scripts.%
+
+% Optional placeholders (update paths to your repo’s actual figure locations):
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/ch3_pipeline}
+  \caption{Detection pipeline: prompt/context to score and allow/block decision.}
+  \label{fig:ch3_pipeline}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/ch3_threshold_transfer}
+  \caption{Locked evaluation protocol: calibrate \texttt{val\_threshold} on \texttt{val}, transfer unchanged to all test splits.}
+  \label{fig:ch3_threshold_transfer}
+\end{figure}

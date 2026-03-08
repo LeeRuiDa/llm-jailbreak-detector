@@ -1,56 +1,48 @@
 # Requirements Specification
 
-## Scope
+This file is the runtime-focused requirements summary used by the repo and demo materials. The school-facing attachment is `docs/Requirements_Specification.md`.
 
-This project delivers an offline-capable jailbreak detector with a CLI and
-Python API. The primary user is an examiner or developer who needs to score
-single prompts or batches without network access. A rules-based detector is
-the default; a LoRA-backed detector is optional and requires local artifacts.
+## Scope
+- local CLI detector with an offline rules baseline
+- optional LoRA detector from local run artifacts
+- reproducible Week 7 evaluation and locked-pack reporting
 
 ## Functional requirements
-
-- FR-1: Single prediction via `jbd predict` accepts a text string and returns a
-  JSON payload with score, threshold, detector, and flag decision.
-- FR-2: Batch prediction via `jbd batch` accepts `.jsonl` or `.txt` input and
-  writes `.jsonl` output. Optional `id` values are preserved.
-- FR-3: Normalization via `jbd normalize` performs NFKC + format character
-  stripping, with optional Mn removal (`--drop-mn`).
-- FR-4: Offline rules detector runs without network access and without model
-  downloads. It is the default detector.
-- FR-5: Optional LoRA detector accepts `--run_dir` and `--threshold` for
-  local inference when weights are available.
-- FR-6: CLI provides `--help` and `doctor` diagnostics for environment checks.
+- `jbd predict` accepts one `--text` input and returns structured JSON.
+- `jbd batch` accepts `.jsonl` or `.txt` input and writes `.jsonl` output.
+- `jbd normalize` exposes the normalization transform used by the runtime.
+- `jbd doctor` reports environment and optional LoRA dependency status.
+- LoRA mode supports `--run_dir` and `--threshold val` for local inference.
 
 ## Non-functional requirements
+- low-FPR calibration target of about 1% on validation
+- deterministic scoring for fixed inputs and artifacts
+- rules mode works offline without model downloads
+- evaluation artifacts persist config, threshold, metrics, and environment metadata
+- runtime is demo-safe on Windows or Linux with Python 3.11+ in CI
 
-- NFR-1: Target <= 1% false positive rate (FPR) at the chosen operating point.
-  This is a goal used for evaluation and calibration, not a hard guarantee.
-- NFR-2: Deterministic results for a given input, threshold, and detector.
-- NFR-3: Offline capability for the default rules detector.
-- NFR-4: Reproducible evaluation via locked config/threshold artifacts and
-  documented command lines.
-- NFR-5: Runs on Windows with Python 3.9+.
+## Runtime input and output schema
+Input JSONL:
+- `text` (required)
+- `id` (optional)
 
-## Input/output schema (JSONL)
-
-Input JSONL (batch):
-
-- `text` (string, required)
-- `id` (string, optional)
-
-Output JSONL (predict/batch):
-
-- `id` (string, optional)
-- `text` (string)
-- `score` (float, detector score)
-- `threshold` (float or string, operating point)
-- `flagged` (boolean)
-- `detector` (string: rules|lora)
-- `normalize_infer` (boolean)
+Output JSON for `predict` and JSONL rows for `batch`:
+- `text`
+- `score`
+- `label`
+- `decision`
+- `threshold`
+- `threshold_used`
+- `flagged`
+- `detector`
+- `model_version`
+- `latency_ms`
+- `rationale`
+- `normalize_infer`
+- optional `id`
 
 ## Out of scope
-
-- Online comparisons against hosted safety APIs (e.g., Llama Guard SaaS).
-- Training or fine-tuning workflows for the exam demo.
-- Web UI or production-grade service deployment.
-- Large-scale dataset ingestion beyond the locked evaluation pack.
+- hosted safety API comparisons
+- web UI or hosted service deployment
+- live training during the exam demo
+- any claim that unsupported CLI switches are part of the shipped runtime

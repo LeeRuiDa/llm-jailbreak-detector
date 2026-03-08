@@ -1,56 +1,63 @@
 # Experiments
 
-## 4.1 Timeline narrative
-- Week 4: establish the final baseline checkpoint (v0.3-week4) used as the training and evaluation reference.
-- Week 5: adv2 augmentation breaks threshold transfer; calibration reduces FPR but collapses TPR under distribution shift.
-- Week 6: train-time robustness sweeps across two perturbation families; normalize_train is selected under a recall constraint.
-- Week 7: 2x2 ablation (normalize_train x adv2 augmentation) isolates causal factors; select week7_norm_only as the final model.
+## 4.1 Locked-pack source of truth
+All thesis numbers in this chapter should be read from the Week 7 locked evaluation pack at `reports/week7/locked_eval_pack/week7_norm_only/`. That pack is the only authoritative source for split counts, frozen metrics, figures, and the selected validation threshold.
 
-## 4.2 Clean + Unicode results
-Table 4.1: Clean + Unicode results (locked eval pack Table A, renumbered).
-| run | split | auroc | auprc | val_threshold | fpr_at_val_threshold | tpr_at_val_threshold | asr_at_threshold |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| week7_adv2_only | val | 0.9982 | 0.9982 | 0.5624 | 0.0097 | 0.9729 | 0.0271 |
-| week7_adv2_only | test_main | 0.9942 | 0.9994 | 0.5624 | 0.0607 | 0.9970 | 0.0030 |
-| week7_adv2_only | test_jbb | 0.8962 | 0.8942 | 0.5624 | 0.6939 | 0.9899 | 0.0101 |
-| week7_adv2_only | test_main_unicode | 0.9933 | 0.9992 | 0.5624 | 0.0642 | 0.9969 | 0.0031 |
-| week7_adv2_only | test_jbb_unicode | 0.8393 | 0.8322 | 0.5624 | 0.7551 | 1.0000 | 0.0000 |
-| week7_control | val | 0.9982 | 0.9982 | 0.6894 | 0.0097 | 0.9709 | 0.0291 |
-| week7_control | test_main | 0.9960 | 0.9996 | 0.6894 | 0.0311 | 0.9878 | 0.0122 |
-| week7_control | test_jbb | 0.9078 | 0.9033 | 0.6894 | 0.5918 | 0.9798 | 0.0202 |
-| week7_control | test_main_unicode | 0.9951 | 0.9995 | 0.6894 | 0.0423 | 0.9858 | 0.0142 |
-| week7_control | test_jbb_unicode | 0.8857 | 0.8800 | 0.6894 | 0.7041 | 0.9697 | 0.0303 |
-| week7_norm_only | val | 0.9983 | 0.9982 | 0.7340 | 0.0094 | 0.9696 | 0.0304 |
-| week7_norm_only | test_main | 0.9958 | 0.9996 | 0.7340 | 0.0311 | 0.9869 | 0.0131 |
-| week7_norm_only | test_jbb | 0.8890 | 0.8747 | 0.7340 | 0.5816 | 0.9798 | 0.0202 |
-| week7_norm_only | test_main_unicode | 0.9949 | 0.9994 | 0.7340 | 0.0429 | 0.9862 | 0.0138 |
-| week7_norm_only | test_jbb_unicode | 0.8814 | 0.8704 | 0.7340 | 0.6531 | 0.9798 | 0.0202 |
-| week7_norm_plus_adv2 | val | 0.9979 | 0.9977 | 0.6815 | 0.0094 | 0.9659 | 0.0341 |
-| week7_norm_plus_adv2 | test_main | 0.9929 | 0.9992 | 0.6815 | 0.0566 | 0.9944 | 0.0056 |
-| week7_norm_plus_adv2 | test_jbb | 0.9018 | 0.8950 | 0.6815 | 0.6122 | 0.9798 | 0.0202 |
-| week7_norm_plus_adv2 | test_main_unicode | 0.9920 | 0.9991 | 0.6815 | 0.0582 | 0.9959 | 0.0041 |
-| week7_norm_plus_adv2 | test_jbb_unicode | 0.8892 | 0.8744 | 0.6815 | 0.6735 | 0.9697 | 0.0303 |
+## 4.2 Split grid and evaluation framing
+The fixed Week 7 grid contains one validation split and two evaluation split families:
 
-## 4.3 Adv2 + Rewrite results and plots
-Table 4.2: Adv2 + Rewrite results (locked eval pack Table B, renumbered).
-| run | split | auroc | auprc | val_threshold | fpr_at_val_threshold | tpr_at_val_threshold | asr_at_threshold |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| week7_adv2_only | test_main_adv2 | 0.9833 | 0.9979 | 0.5624 | 0.0985 | 0.9856 | 0.0144 |
-| week7_adv2_only | test_jbb_adv2 | 0.6415 | 0.6689 | 0.5624 | 0.6633 | 0.7677 | 0.2323 |
-| week7_adv2_only | test_main_rewrite | 0.9912 | 0.9990 | 0.5624 | 0.0801 | 0.9977 | 0.0023 |
-| week7_adv2_only | test_jbb_rewrite | 0.8870 | 0.8918 | 0.5624 | 0.6939 | 0.9899 | 0.0101 |
-| week7_control | test_main_adv2 | 0.6547 | 0.9379 | 0.6894 | 0.6826 | 0.9731 | 0.0269 |
-| week7_control | test_jbb_adv2 | 0.6007 | 0.5727 | 0.6894 | 0.8980 | 0.9495 | 0.0505 |
-| week7_control | test_main_rewrite | 0.9934 | 0.9992 | 0.6894 | 0.0537 | 0.9896 | 0.0104 |
-| week7_control | test_jbb_rewrite | 0.8993 | 0.8907 | 0.6894 | 0.6020 | 0.9798 | 0.0202 |
-| week7_norm_only | test_main_adv2 | 0.7133 | 0.9523 | 0.7340 | 0.6403 | 0.9967 | 0.0033 |
-| week7_norm_only | test_jbb_adv2 | 0.6318 | 0.6294 | 0.7340 | 0.8469 | 0.8990 | 0.1010 |
-| week7_norm_only | test_main_rewrite | 0.9942 | 0.9994 | 0.7340 | 0.0531 | 0.9902 | 0.0098 |
-| week7_norm_only | test_jbb_rewrite | 0.8956 | 0.8964 | 0.7340 | 0.5714 | 0.9899 | 0.0101 |
-| week7_norm_plus_adv2 | test_main_adv2 | 0.9833 | 0.9979 | 0.6815 | 0.0947 | 0.9831 | 0.0169 |
-| week7_norm_plus_adv2 | test_jbb_adv2 | 0.6329 | 0.6506 | 0.6815 | 0.5408 | 0.6768 | 0.3232 |
-| week7_norm_plus_adv2 | test_main_rewrite | 0.9905 | 0.9990 | 0.6815 | 0.0718 | 0.9968 | 0.0032 |
-| week7_norm_plus_adv2 | test_jbb_rewrite | 0.8754 | 0.8701 | 0.6815 | 0.6224 | 0.9798 | 0.0202 |
+| split | total | benign | attack |
+| --- | ---: | ---: | ---: |
+| train | 201,276 | 14,859 | 186,417 |
+| val | 6,106 | 3,082 | 3,024 |
+| test_main | 35,230 | 3,147 | 32,083 |
+| test_jbb | 197 | 98 | 99 |
+
+Unicode, adv2, and rewrite variants preserve the same sample counts as their corresponding clean split.
+
+The threshold is calibrated on `val` and transferred unchanged to all evaluation splits. Because `test_main` and `test_jbb` were inspected during Week 7 model selection, they should be described as development-evaluation splits rather than blind final-test sets.
+
+## 4.3 Model selection summary
+The Week 7 ablation varied two factors:
+
+- `normalize_train` in `{false, true}`
+- `aug_adv2_prob` in `{0.0, 0.25}`
+
+The selected final run was `week7_norm_only`, with:
+
+- backbone `microsoft/deberta-v3-base`
+- `normalize_train=true`
+- `normalize_infer=false`
+- no adv2 or rewrite augmentation
+- `val_threshold=0.7340`
+
+The rationale for selection is pragmatic rather than absolute: among the tested options, `week7_norm_only` gave the least harmful trade-off between clean performance and perturbation robustness without the severe recall collapse seen under heavier adv2 training on `test_jbb_adv2`.
+
+## 4.4 Main locked-pack results for the selected run
+
+### Clean + Unicode
+| split | AUROC | AUPRC | FPR@thr | TPR@thr | ASR@thr |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| val | 0.9983 | 0.9982 | 0.0094 | 0.9696 | 0.0304 |
+| test_main | 0.9958 | 0.9996 | 0.0311 | 0.9869 | 0.0131 |
+| test_jbb | 0.8890 | 0.8747 | 0.5816 | 0.9798 | 0.0202 |
+| test_main_unicode | 0.9949 | 0.9994 | 0.0429 | 0.9862 | 0.0138 |
+| test_jbb_unicode | 0.8814 | 0.8704 | 0.6531 | 0.9798 | 0.0202 |
+
+### adv2 + Rewrite
+| split | AUROC | AUPRC | FPR@thr | TPR@thr | ASR@thr |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| test_main_adv2 | 0.7133 | 0.9523 | 0.6403 | 0.9967 | 0.0033 |
+| test_jbb_adv2 | 0.6318 | 0.6294 | 0.8469 | 0.8990 | 0.1010 |
+| test_main_rewrite | 0.9942 | 0.9994 | 0.0531 | 0.9902 | 0.0098 |
+| test_jbb_rewrite | 0.8956 | 0.8964 | 0.5714 | 0.9899 | 0.0101 |
+
+Key interpretation:
+
+- clean `test_main` ranking is strong, but FPR already rises above the `1%` design target
+- JBB shows severe benign-distribution shift even without perturbation
+- adv2 is the decisive robustness failure mode because it destroys operating-point stability
+- rewrite is less harmful on the main distribution, but it does not solve the JBB false-positive problem
 
 ![Figure 4.1: ROC curve for week7_norm_only on test_main_adv2.](reports/week7/locked_eval_pack/week7_norm_only/figures/roc_week7_norm_only_test_main_adv2.png)
 
@@ -58,23 +65,14 @@ Table 4.2: Adv2 + Rewrite results (locked eval pack Table B, renumbered).
 
 ![Figure 4.3: Score histogram for week7_norm_only on test_main_adv2.](reports/week7/locked_eval_pack/week7_norm_only/figures/hist_week7_norm_only_test_main_adv2.png)
 
-## 4.4 Ablation effects
-Table 4.3: Ablation effects (locked eval pack Table D, renumbered).
-| run | group | mean_auroc | mean_auprc | mean_fpr | mean_tpr | mean_asr | delta_fpr_vs_control | delta_tpr_vs_control | delta_asr_vs_control |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| week7_adv2_only | clean | 0.9452 | 0.9468 | 0.3773 | 0.9935 | 0.0065 | 0.0658 | 0.0097 | -0.0097 |
-| week7_adv2_only | unicode | 0.9163 | 0.9157 | 0.4096 | 0.9985 | 0.0015 | 0.0365 | 0.0207 | -0.0207 |
-| week7_adv2_only | adv2 | 0.8124 | 0.8334 | 0.3809 | 0.8766 | 0.1234 | -0.4094 | -0.0847 | 0.0847 |
-| week7_adv2_only | rewrite | 0.9391 | 0.9454 | 0.3870 | 0.9938 | 0.0062 | 0.0591 | 0.0091 | -0.0091 |
-| week7_control | clean | 0.9519 | 0.9514 | 0.3115 | 0.9838 | 0.0162 | 0.0000 | 0.0000 | 0.0000 |
-| week7_control | unicode | 0.9404 | 0.9397 | 0.3732 | 0.9778 | 0.0222 | 0.0000 | 0.0000 | 0.0000 |
-| week7_control | adv2 | 0.6277 | 0.7553 | 0.7903 | 0.9613 | 0.0387 | 0.0000 | 0.0000 | 0.0000 |
-| week7_control | rewrite | 0.9463 | 0.9450 | 0.3279 | 0.9847 | 0.0153 | 0.0000 | 0.0000 | 0.0000 |
-| week7_norm_only | clean | 0.9424 | 0.9371 | 0.3064 | 0.9834 | 0.0166 | -0.0051 | -0.0004 | 0.0004 |
-| week7_norm_only | unicode | 0.9381 | 0.9349 | 0.3480 | 0.9830 | 0.0170 | -0.0252 | 0.0052 | -0.0052 |
-| week7_norm_only | adv2 | 0.6726 | 0.7908 | 0.7436 | 0.9478 | 0.0522 | -0.0466 | -0.0135 | 0.0135 |
-| week7_norm_only | rewrite | 0.9449 | 0.9479 | 0.3122 | 0.9900 | 0.0100 | -0.0156 | 0.0053 | -0.0053 |
-| week7_norm_plus_adv2 | clean | 0.9473 | 0.9471 | 0.3344 | 0.9871 | 0.0129 | 0.0229 | 0.0033 | -0.0033 |
-| week7_norm_plus_adv2 | unicode | 0.9406 | 0.9368 | 0.3658 | 0.9828 | 0.0172 | -0.0074 | 0.0050 | -0.0050 |
-| week7_norm_plus_adv2 | adv2 | 0.8081 | 0.8243 | 0.3178 | 0.8300 | 0.1700 | -0.4725 | -0.1313 | 0.1313 |
-| week7_norm_plus_adv2 | rewrite | 0.9330 | 0.9345 | 0.3471 | 0.9883 | 0.0117 | 0.0193 | 0.0036 | -0.0036 |
+## 4.5 Proposal-compliance note on external guardrails
+The original proposal promised comparison against existing guardrails such as Llama Guard 2, Prompt Guard, or ProtectAI-style detectors in addition to a rules baseline. The final submission does not provide a reproducible benchmark against those external systems.
+
+That reduction is deliberate and should be stated explicitly. During the submission pass, the local repository, local Python environment, and local Hugging Face cache were checked for runnable local artifacts corresponding to those proposal-named systems. None were available in the submission environment, and a hosted API benchmark would have violated the project's offline-first reproducibility constraint. The final thesis should therefore describe the work as an offline reproducible detector study with a rules baseline and a learned detector, not as a completed external-guardrail bakeoff.
+
+## 4.6 Claim boundary
+The strongest defensible experimental claim is:
+
+- `week7_norm_only` provides strong ranking quality on the main project distribution.
+- The transferred threshold does not remain stable under distribution shift, especially on JailbreakBench and adv2-style perturbations.
+- The Week 7 pack is a reproducible development-evaluation bundle, not a blind final-test report.

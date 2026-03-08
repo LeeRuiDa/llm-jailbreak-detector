@@ -1,0 +1,14 @@
+# Proposal Alignment Matrix
+
+| Proposal task / required deliverable | Evidence | Status | Submission wording |
+| --- | --- | --- | --- |
+| Unified dataset and preprocessing pipeline | `src/data/io.py`, `scripts/dataset_utils.py`, `scripts/validate_dataset.py`, `thesis/03_method.md` | Delivered | The submission provides a canonical JSONL schema, prompt/context assembly, validation checks, and documented preprocessing controls. |
+| Design/model establishment | `docs/Design_Documentation.md`, `thesis/03_method.md`, `submission/Technical Attachments/Design Documentation.md` | Delivered | The architecture, module map, data flow, and ML pipeline are documented as final submission artifacts. |
+| Rules baseline | `src/baselines/rules.py`, `src/llm_jailbreak_detector/rules_detector.py`, `demo/DEMO_SCRIPT.md` | Delivered | A deterministic offline rules baseline is implemented and used as the guaranteed demo path. |
+| Learned detector / LoRA pipeline | `scripts/train_lora.py`, `src/llm_jailbreak_detector/lora_detector.py`, `runs/week7_norm_only/config.json` | Delivered | The project delivers a local-artifact LoRA classifier with persisted validation threshold and reproducible run metadata. |
+| Robustness evaluation and locked pack | `reports/week7/locked_eval_pack/week7_norm_only/`, `thesis/04_experiments.md`, `thesis/05_robustness.md` | Delivered | Unicode, adv2, and rewrite stress results are packaged in the locked Week 7 evidence bundle and integrated into the thesis. |
+| Comparison against existing guardrails | `submission/Evidence/Scope Narrowing Note.md`, `thesis ready chapters/ch4 exp.tex.txt`, `docs/TRACEABILITY_MATRIX.md` | Delivered with narrowed scope | The final submission narrows this deliverable to an offline reproducible detector study because no runnable local artifact for proposal-named external guardrails was available in the submission environment. |
+| Installable / runnable software | `pyproject.toml`, `src/llm_jailbreak_detector/`, `submission/Software/README.md`, `demo/` | Delivered | The repo ships an installable package and an examiner-safe rules-only demo flow. |
+| Testing documentation | `docs/Testing_Documentation.md`, `.github/workflows/ci.yml`, `tests/` | Delivered | Automated and manual verification procedures are documented, with local results and CI coverage recorded. |
+| User manual | `docs/User_Manual.md`, `submission/Technical Attachments/User Manual.md` | Delivered | The submission includes final install, command, schema, demo, and troubleshooting guidance. |
+| Technical attachment pack | `submission/Technical Attachments/` | Delivered | The school-required technical attachments are bundled under school-facing names in one obvious folder. |

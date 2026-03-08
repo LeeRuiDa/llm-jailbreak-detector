@@ -1,0 +1,93 @@
+% Chapter 5 - Robustness Analysis
+\chapter{Robustness Analysis}
+\label{ch:robustness}
+
+This chapter focuses on the \texttt{week7\_norm\_only} winner under the fixed threshold selected on \texttt{val}. The central question is not whether the detector can rank attacks above benign samples in-distribution, but whether the \textbf{same} low-FPR operating point remains usable when text is perturbed or the evaluation distribution shifts. The locked Week-7 results show an honest but mixed answer: recall is often preserved, while false-positive control degrades sharply on some shifted splits.
+
+\section{Threat model and evaluation setting}
+\label{sec:ch5_threat_model}
+
+All robustness claims in this chapter use the frozen Week-7 locked pack and the transferred validation threshold \(\tau = 0.7340\). No split-specific recalibration is allowed. The relevant split sizes are:
+\begin{itemize}
+  \item \texttt{val}: 6,106 total = 3,082 benign + 3,024 attack
+  \item \texttt{test\_main}: 35,230 total = 3,147 benign + 32,083 attack
+  \item \texttt{test\_jbb}: 197 total = 98 benign + 99 attack
+\end{itemize}
+and the unicode/adv2/rewrite variants preserve the same sample counts as their corresponding clean split by construction.
+
+The perturbation families correspond to distinct stress modes:
+\begin{itemize}
+  \item \textbf{unicode}: formatting and character-set obfuscation,
+  \item \textbf{adv2}: character-level noise such as homoglyph swaps, zero-width insertions, and punctuation/spacing noise,
+  \item \textbf{rewrite}: mild paraphrase-like lexical editing.
+\end{itemize}
+
+\section{Fixed-threshold robustness summary}
+\label{sec:ch5_threshold_transfer_summary}
+
+\begin{table}[t]
+\centering
+\caption{Final-model robustness at the transferred validation threshold (\texttt{week7\_norm\_only}).}
+\label{tab:ch5_threshold_transfer}
+\begin{tabular}{lrrrrr}
+\hline
+split & benign $n_0$ & attack $n_1$ & FPR@thr & TPR@thr & ASR@thr \\
+\hline
+test\_main & 3,147 & 32,083 & 0.0311 & 0.9869 & 0.0131 \\
+test\_main\_unicode & 3,147 & 32,083 & 0.0429 & 0.9862 & 0.0138 \\
+test\_main\_adv2 & 3,147 & 32,083 & 0.6403 & 0.9967 & 0.0033 \\
+test\_main\_rewrite & 3,147 & 32,083 & 0.0531 & 0.9902 & 0.0098 \\
+test\_jbb & 98 & 99 & 0.5816 & 0.9798 & 0.0202 \\
+test\_jbb\_unicode & 98 & 99 & 0.6531 & 0.9798 & 0.0202 \\
+test\_jbb\_adv2 & 98 & 99 & 0.8469 & 0.8990 & 0.1010 \\
+test\_jbb\_rewrite & 98 & 99 & 0.5714 & 0.9899 & 0.0101 \\
+\hline
+\end{tabular}
+\end{table}
+
+Two patterns dominate Table~\ref{tab:ch5_threshold_transfer}. First, recall stays high on most splits, especially on \texttt{test\_main}, \texttt{test\_main\_unicode}, and \texttt{test\_main\_rewrite}. Second, false-positive control is not stable: even the clean held-out evaluations exceed the design target of \(1\%\) FPR, and some shifted splits become operationally unusable.
+
+\section{Unicode, adv2, and rewrite behavior}
+\label{sec:ch5_by_family}
+
+\subsection{Unicode: modest ranking change, larger operating-point shift}
+\label{sec:ch5_unicode}
+
+Unicode perturbation increases false positives more than it harms recall. On \texttt{test\_main}, FPR rises from \(0.0311\) to \(0.0429\) while TPR stays near \(0.986\). On \texttt{test\_jbb}, the same trend is harsher: FPR rises from \(0.5816\) to \(0.6531\) with no compensating TPR gain. This indicates that the locked configuration is more robust in ranking than in threshold transfer.
+
+\subsection{adv2: primary robustness failure mode}
+\label{sec:ch5_adv2}
+
+adv2 is the decisive failure case. On \texttt{test\_main\_adv2}, recall remains extremely high (TPR \(= 0.9967\)), but FPR inflates to \(0.6403\). On \texttt{test\_jbb\_adv2}, both parts of the operating point degrade: FPR reaches \(0.8469\) and TPR falls to \(0.8990\). In deployment terms, this means the detector would over-block benign traffic while still missing some obfuscated attacks. This is the strongest empirical reason the thesis must \textbf{not} describe the model as deployment-ready.
+
+\subsection{Rewrite: comparatively mild on the main distribution}
+\label{sec:ch5_rewrite}
+
+Rewrite perturbations are less damaging than adv2. On \texttt{test\_main\_rewrite}, FPR is \(0.0531\) and TPR is \(0.9902\); on \texttt{test\_jbb\_rewrite}, TPR remains high at \(0.9899\), but the benign FPR is still \(0.5714\). This again shows that cross-dataset benign shift, not only perturbation type, is a dominant source of failure.
+
+\section{Small-sample caution on JBB}
+\label{sec:ch5_small_n}
+
+The JBB splits contain only \(98\) benign examples, so the FPR estimate is coarse: each additional benign false positive changes the reported FPR by approximately \(1/98 \approx 1.02\%\). The JBB results are therefore best interpreted as a \textbf{stress signal} rather than a highly precise estimate of deployment FPR. Even with that caution, the direction of the evidence is unambiguous: the transferred threshold is not stable on the JBB benign distribution.
+
+\section{Implications for thesis claims}
+\label{sec:ch5_claim_boundary}
+
+The correct thesis claim is narrow and honest:
+\begin{itemize}
+  \item \textbf{Supported:} the final model achieves strong ranking quality and high recall on the project's main evaluation distribution.
+  \item \textbf{Supported:} the locked evaluation pack reveals severe operating-point drift under distribution shift, especially on JBB and adv2-style perturbations.
+  \item \textbf{Not supported:} a claim that the selected threshold generalizes robustly across unseen jailbreak corpora or obfuscation-heavy channels.
+\end{itemize}
+
+This framing still yields a defensible contribution. The project delivers a reproducible offline detector study with a frozen baseline, a learned detector, a locked evaluation bundle, and an explicit demonstration of threshold-transfer failure modes. That is academically stronger than overstating production readiness.
+
+\section{Mitigation directions}
+\label{sec:ch5_mitigation}
+
+The results suggest three high-value follow-ups:
+\begin{enumerate}
+  \item introduce a benign-heavy calibration/dev split so the operating point better reflects deployment priors,
+  \item add hard-negative benign text resembling JBB safety discussion and obfuscated benign prompts, and
+  \item publish separate operating points for thesis reporting versus live demo use, rather than implying one threshold is optimal everywhere.
+\end{enumerate}
