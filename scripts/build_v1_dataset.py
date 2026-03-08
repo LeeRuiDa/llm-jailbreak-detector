@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 from collections import Counter, defaultdict
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List
 
 from dataset_utils import iter_jsonl, normalize_for_hash, sha256_str, write_jsonl
 

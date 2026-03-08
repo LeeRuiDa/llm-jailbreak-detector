@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import random
+import shutil
 import subprocess
 import sys
 from contextlib import nullcontext
@@ -28,12 +28,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.data.io import load_examples
-from src.eval.metrics import compute_metrics, tpr_at_fpr
-from src.preprocess.unicode import normalize_text
-from src.preprocess.normalize import normalize_text as normalize_infer_text
 from src.augment.adv2 import apply_adv2
 from src.augment.rewrite import apply_rewrite
+from src.data.io import load_examples
+from src.eval.metrics import compute_metrics, tpr_at_fpr
+from src.preprocess.normalize import normalize_text as normalize_infer_text
+from src.preprocess.unicode import normalize_text
 
 BASELINE_VERSION = "v0.3-week4"
 DEFAULT_BACKBONE = "roberta-base"
@@ -47,8 +47,6 @@ LORA_DROPOUT = 0.05
 
 
 def set_seed(seed: int) -> None:
-    import random
-
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -91,7 +89,6 @@ def _default_run_dir(backbone: str, use_unicode: bool) -> Path:
 
 
 def _infer_dataset_name(train_path: Path) -> str:
-    # Heuristic: parent directory name (e.g., data/v1/train.jsonl -> v1)
     return train_path.parent.name or "-"
 
 
@@ -108,8 +105,9 @@ def _select_lora_targets(model_type: str) -> List[str]:
 
 def _extra_modules_to_save(model) -> List[str]:
     extras: List[str] = []
-    if any(name.endswith("pooler") for name, _ in model.named_modules()):
-        extras.append("pooler")
+    for name in ("pooler", "classifier", "score"):
+        if hasattr(model, name):
+            extras.append(name)
     return extras
 
 
@@ -171,6 +169,31 @@ def _apply_score_transform(scores_p1: List[float], score_transform: str) -> List
     return list(scores_p1)
 
 
+def _select_score_transform(y_true: List[int], y_score_p1: List[float]) -> str:
+    raw_metrics = compute_metrics(y_true, y_score_p1, target_fpr=TARGET_FPR)
+    raw_auc = raw_metrics.get("auroc")
+    if raw_auc is None:
+        return "identity"
+    return "invert" if raw_auc < 0.5 else "identity"
+
+
+def _compute_validation_metrics(y_true: List[int], y_score_p1: List[float]) -> Tuple[Dict[str, float | None], List[float], str]:
+    score_transform = _select_score_transform(y_true, y_score_p1)
+    y_score = _apply_score_transform(y_score_p1, score_transform)
+    metrics = compute_metrics(y_true, y_score, target_fpr=TARGET_FPR)
+    metrics["score_transform"] = score_transform
+    metrics["score_is_attack_prob"] = True
+    return metrics, y_score, score_transform
+
+
+def _selection_key(metrics: Dict[str, float | None]) -> Tuple[float, float]:
+    tpr = metrics.get("tpr_at_fpr")
+    auroc = metrics.get("auroc")
+    tpr_value = float("-inf") if tpr is None else float(tpr)
+    auroc_value = float("-inf") if auroc is None else float(auroc)
+    return tpr_value, auroc_value
+
+
 def collate_with_extras(features: List[Dict], data_collator) -> Dict:
     tensor_keys = {"input_ids", "attention_mask", "token_type_ids", "labels", "label"}
     extras = {}
@@ -191,8 +214,7 @@ def write_predictions(path: Path, ids: Iterable[str], y_true: Iterable[int], y_s
 def compute_split_metrics(y_true: List[int], y_score: List[float], threshold: float) -> Dict[str, float | None]:
     y_true_arr = np.asarray(y_true).astype(int)
     y_score_arr = np.asarray(y_score).astype(float)
-    auroc = compute_metrics(y_true_arr, y_score_arr, target_fpr=TARGET_FPR)["auroc"] if len(set(y_true)) > 1 else None
-    auprc = compute_metrics(y_true_arr, y_score_arr, target_fpr=TARGET_FPR)["auprc"] if len(set(y_true)) > 1 else None
+    metrics = compute_metrics(y_true_arr, y_score_arr, target_fpr=TARGET_FPR) if len(set(y_true)) > 1 else {"auroc": None, "auprc": None}
     pred_attack = y_score_arr >= threshold
     pos = y_true_arr == 1
     neg = y_true_arr == 0
@@ -200,8 +222,8 @@ def compute_split_metrics(y_true: List[int], y_score: List[float], threshold: fl
     fpr = float((pred_attack & neg).sum() / neg.sum()) if neg.sum() else 0.0
     asr = float((~pred_attack & pos).sum() / pos.sum()) if pos.sum() else 0.0
     return {
-        "auroc": auroc,
-        "auprc": auprc,
+        "auroc": metrics.get("auroc"),
+        "auprc": metrics.get("auprc"),
         "tpr_at_fpr": tpr,
         "fpr_actual": fpr,
         "threshold": float(threshold),
@@ -382,32 +404,39 @@ def main() -> None:
         model.eval()
         all_ids: List[str] = []
         all_labels: List[int] = []
-        all_scores_p1: List[float] = []
+        all_scores_p_attack: List[float] = []
         with torch.no_grad():
             for batch in loader:
                 ids = batch.pop("id")
                 labels = batch.pop("labels")
                 inputs = {k: v.to(device) for k, v in batch.items() if torch.is_tensor(v)}
                 logits = model(**inputs).logits
-                probs = torch.softmax(logits.float(), dim=-1)  # force fp32 for stability
-                score_p1 = probs[:, 1]
+                probs = torch.softmax(logits.float(), dim=-1)
+                score_p_attack = probs[:, attack_class_index]
                 all_ids.extend(ids)
                 all_labels.extend(labels.detach().cpu().tolist())
-                all_scores_p1.extend(score_p1.detach().cpu().tolist())
-        return all_ids, all_labels, all_scores_p1
+                all_scores_p_attack.extend(score_p_attack.detach().cpu().tolist())
+        return all_ids, all_labels, all_scores_p_attack
 
     metrics_history: List[Dict] = []
+    best_epoch: int | None = None
+    best_epoch_metrics: Dict[str, float | None] | None = None
+    best_checkpoint_source: Path | None = None
+
     for epoch in range(args.epochs):
         loss = train_one_epoch()
-        _, y_true, y_score_p1 = run_eval(val_loader)
-        epoch_metrics = compute_metrics(y_true, y_score_p1, target_fpr=TARGET_FPR)
+        _, y_true, y_score_p_attack = run_eval(val_loader)
+        epoch_metrics, _, _ = _compute_validation_metrics(y_true, y_score_p_attack)
         epoch_metrics["epoch"] = epoch
         epoch_metrics["train_loss"] = loss
         metrics_history.append(epoch_metrics)
-        print(f"Epoch {epoch} loss={loss:.4f} auroc={epoch_metrics['auroc']}")
+        print(
+            f"Epoch {epoch} loss={loss:.4f} tpr@1%fpr={epoch_metrics['tpr_at_fpr']} auroc={epoch_metrics['auroc']}"
+        )
 
         ckpt_dir = run_dir / f"ckpt_epoch_{epoch}"
         ckpt_dir.mkdir(parents=True, exist_ok=True)
+        checkpoint_path = ckpt_dir / "checkpoint.pt"
         torch.save(
             {
                 "model_state": model.state_dict(),
@@ -417,22 +446,41 @@ def main() -> None:
                 "epoch": epoch,
                 "global_step": global_step,
             },
-            ckpt_dir / "checkpoint.pt",
+            checkpoint_path,
         )
+
+        if best_epoch_metrics is None or _selection_key(epoch_metrics) > _selection_key(best_epoch_metrics):
+            best_epoch = epoch
+            best_epoch_metrics = dict(epoch_metrics)
+            best_checkpoint_source = checkpoint_path
 
     (run_dir / "metrics.json").write_text(json.dumps(metrics_history, indent=2), encoding="utf-8")
 
-    # Final eval on all splits with val-derived threshold
-    val_ids, val_y_true, val_y_score_p1 = run_eval(val_loader)
-    val_metrics_raw = compute_metrics(val_y_true, val_y_score_p1, target_fpr=TARGET_FPR)
-    val_auc = val_metrics_raw.get("auroc")
-    if val_auc is None:
-        print("Warning: val AUROC undefined; defaulting to identity score_transform.")
-        score_transform = "identity"
-    else:
-        score_transform = "invert" if val_auc < 0.5 else "identity"
+    if best_epoch is None or best_epoch_metrics is None or best_checkpoint_source is None:
+        raise RuntimeError("Failed to select a best checkpoint from training history.")
 
-    val_y_score = _apply_score_transform(val_y_score_p1, score_transform)
+    best_checkpoint_dir = run_dir / "best_checkpoint"
+    best_checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    best_checkpoint_path = best_checkpoint_dir / "checkpoint.pt"
+    shutil.copy2(best_checkpoint_source, best_checkpoint_path)
+
+    best_metrics_payload = dict(best_epoch_metrics)
+    best_metrics_payload["selected_by"] = {
+        "primary": "tpr_at_fpr",
+        "tie_break": "auroc",
+        "target_fpr": TARGET_FPR,
+    }
+    (run_dir / "best_metrics.json").write_text(
+        json.dumps(best_metrics_payload, indent=2), encoding="utf-8"
+    )
+
+    best_state = torch.load(best_checkpoint_source, map_location=device)
+    model.load_state_dict(best_state["model_state"])
+
+    val_ids, val_y_true, val_y_score_p_attack = run_eval(val_loader)
+    _, val_y_score, score_transform = _compute_validation_metrics(
+        val_y_true, val_y_score_p_attack
+    )
     op = tpr_at_fpr(np.asarray(val_y_true), np.asarray(val_y_score), target_fpr=TARGET_FPR)
     op_payload = asdict(op)
     op_payload["score_is_attack_prob"] = True
@@ -449,20 +497,21 @@ def main() -> None:
         metrics["target_fpr"] = TARGET_FPR
         metrics["split"] = split_name
         metrics["threshold_source"] = "val"
+        metrics["score_is_attack_prob"] = True
+        metrics["score_transform"] = score_transform
         metrics_path = run_dir / f"final_metrics_{split_name}.json"
         metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
     eval_and_save("val", val_ids, val_y_true, val_y_score)
 
-    tm_ids, tm_y_true, tm_y_score_p1 = run_eval(test_main_loader)
-    tm_y_score = _apply_score_transform(tm_y_score_p1, score_transform)
+    tm_ids, tm_y_true, tm_y_score_p_attack = run_eval(test_main_loader)
+    tm_y_score = _apply_score_transform(tm_y_score_p_attack, score_transform)
     eval_and_save("test_main", tm_ids, tm_y_true, tm_y_score)
 
-    jbb_ids, jbb_y_true, jbb_y_score_p1 = run_eval(test_jbb_loader)
-    jbb_y_score = _apply_score_transform(jbb_y_score_p1, score_transform)
+    jbb_ids, jbb_y_true, jbb_y_score_p_attack = run_eval(test_jbb_loader)
+    jbb_y_score = _apply_score_transform(jbb_y_score_p_attack, score_transform)
     eval_and_save("test_jbb", jbb_ids, jbb_y_true, jbb_y_score)
 
-    # Save adapter + tokenizer
     adapter_dir = run_dir / "lora_adapter"
     model.save_pretrained(adapter_dir)
     tokenizer.save_pretrained(adapter_dir)
@@ -508,6 +557,14 @@ def main() -> None:
         "aug_adv2_prob": float(args.aug_adv2_prob),
         "aug_rewrite_prob": float(args.aug_rewrite_prob),
         "aug_seed": args.aug_seed,
+        "best_epoch": best_epoch,
+        "best_checkpoint_path": str(best_checkpoint_path.resolve()),
+        "best_metrics_path": str((run_dir / 'best_metrics.json').resolve()),
+        "best_checkpoint_selection": {
+            "primary": "tpr_at_fpr",
+            "tie_break": "auroc",
+            "target_fpr": TARGET_FPR,
+        },
         "lora": {
             "r": LORA_R,
             "alpha": LORA_ALPHA,

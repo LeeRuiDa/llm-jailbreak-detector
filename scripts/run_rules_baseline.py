@@ -1,16 +1,23 @@
 from __future__ import annotations
-import argparse, json, os, sys, subprocess
+
+import argparse
+import json
+import os
+import subprocess
+import sys
 from datetime import datetime
-from typing import Dict, Any, Iterable, Tuple
+from typing import Any, Dict, Iterable, Tuple
+
+from sklearn.metrics import average_precision_score, roc_auc_score
+
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from src.data.io import load_examples
-from src.preprocess.unicode import normalize_text
 from src.baselines.rules import RulesDetector
+from src.data.io import load_examples
 from src.eval.metrics import compute_metrics
-from sklearn.metrics import average_precision_score, roc_auc_score
+from src.preprocess.unicode import normalize_text
 
 BASELINE_VERSION = "v0.2-week3"
 
@@ -109,7 +116,6 @@ def main() -> None:
     else:
         split = "unknown"
 
-    # Save config
     dataset_name = _infer_dataset_name(args.data)
     git_commit = _get_git_commit(REPO_ROOT)
     config: Dict[str, Any] = {
@@ -144,13 +150,19 @@ def main() -> None:
             y_true.append(ex.label)
             y_score.append(score_attack)
 
-            f.write(json.dumps({
-                "id": ex.id,
-                "label": ex.label,
-                "score": score_attack,
-                "attack_type": ex.attack_type,
-                "meta": ex.meta,
-            }, ensure_ascii=False) + "\n")
+            f.write(
+                json.dumps(
+                    {
+                        "id": ex.id,
+                        "label": ex.label,
+                        "score": score_attack,
+                        "attack_type": ex.attack_type,
+                        "meta": ex.meta,
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
 
     metrics: Dict[str, float | None]
     if split == "val":
@@ -189,6 +201,7 @@ def main() -> None:
 
     print("Wrote:", args.out_dir)
     print(json.dumps(metrics, indent=2))
+
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from typing import Dict, Iterable, List, Set
 
 from dataset_utils import iter_jsonl
@@ -69,9 +69,9 @@ def main() -> None:
 
     if overlap_train_val or overlap_train_test or overlap_val_test:
         print("Group overlap detected:")
-        print(f"train∩val: {len(overlap_train_val)}")
-        print(f"train∩test_main: {len(overlap_train_test)}")
-        print(f"val∩test_main: {len(overlap_val_test)}")
+        print(f"trainâˆ©val: {len(overlap_train_val)}")
+        print(f"trainâˆ©test_main: {len(overlap_train_test)}")
+        print(f"valâˆ©test_main: {len(overlap_val_test)}")
     else:
         print("No group_id overlap across train/val/test_main.")
 

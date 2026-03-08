@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import re
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
 
 # Week-1 baseline: intentionally simple. Improve later.
 DEFAULT_PATTERNS = [
@@ -13,9 +14,11 @@ DEFAULT_PATTERNS = [
     r"developer message",
 ]
 
+
 @dataclass
 class RulesConfig:
     patterns: List[str]
+
 
 class RulesDetector:
     def __init__(self, config: RulesConfig | None = None) -> None:

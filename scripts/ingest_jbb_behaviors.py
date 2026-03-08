@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from typing import Dict, Iterable, Optional
 
 from dataset_utils import format_text, make_group_id, make_id, sha256_str, write_jsonl

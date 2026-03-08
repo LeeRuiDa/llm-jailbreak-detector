@@ -62,7 +62,7 @@ def _build_parser() -> argparse.ArgumentParser:
     normalize.add_argument("--text", required=True, help="Input text")
     normalize.add_argument("--drop-mn", action="store_true", help="Drop Mn marks")
 
-    doctor = sub.add_parser("doctor", help="Print environment diagnostics")
+    sub.add_parser("doctor", help="Print environment diagnostics")
 
     return parser
 

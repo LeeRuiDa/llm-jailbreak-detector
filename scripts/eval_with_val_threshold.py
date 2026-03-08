@@ -5,7 +5,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import Iterable, Tuple
 
 import numpy as np
 from sklearn.metrics import average_precision_score, roc_auc_score

@@ -4,6 +4,7 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -19,8 +20,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.data.io import load_examples
-from src.preprocess.unicode import normalize_text
 from src.preprocess.normalize import normalize_text as normalize_infer_text
+from src.preprocess.unicode import normalize_text
 
 
 @dataclass
@@ -212,6 +213,30 @@ def _write_predictions(path: Path, ids: Iterable[str], y_true: Iterable[int], y_
             f.write(json.dumps({"id": ex_id, "label": int(y), "score": float(s)}) + "\n")
 
 
+def _load_evaluation_manifest(run_dir: Path) -> Dict:
+    manifest_path = run_dir / "evaluation_manifest.json"
+    if not manifest_path.exists():
+        return {
+            "generated_by": "scripts/eval_lora_from_run.py",
+            "run_dir": str(run_dir.resolve()),
+            "evaluations": {},
+        }
+    with manifest_path.open("r", encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    if not isinstance(manifest.get("evaluations"), dict):
+        manifest["evaluations"] = {}
+    return manifest
+
+
+def _write_evaluation_manifest(run_dir: Path, evaluation_key: str, payload: Dict) -> Path:
+    manifest = _load_evaluation_manifest(run_dir)
+    manifest["evaluations"][evaluation_key] = payload
+    manifest["updated_at"] = datetime.now(timezone.utc).isoformat()
+    manifest_path = run_dir / "evaluation_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return manifest_path
+
+
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Evaluate a saved LoRA run on a new dataset split.")
     ap.add_argument("--run_dir", required=True, help="Path to run directory (runs/lora_v1_*)")
@@ -248,6 +273,7 @@ def main() -> None:
         raise KeyError("Missing backbone/model_name in run config.json.")
 
     use_unicode = bool(cfg.get("unicode", False))
+    attack_class_index = int(cfg.get("attack_class_index", 1))
     tokenizer = _load_tokenizer(run_dir, backbone)
     model = _load_model(run_dir, backbone)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -283,7 +309,7 @@ def main() -> None:
 
     all_ids: List[str] = []
     all_labels: List[int] = []
-    all_scores_p1: List[float] = []
+    all_scores_p_attack: List[float] = []
     with torch.no_grad():
         for batch in loader:
             ids = batch.pop("id")
@@ -291,12 +317,12 @@ def main() -> None:
             inputs = {k: v.to(device) for k, v in batch.items() if torch.is_tensor(v)}
             logits = model(**inputs).logits
             probs = torch.softmax(logits.float(), dim=-1)
-            score_p1 = probs[:, 1]
+            score_p_attack = probs[:, attack_class_index]
             all_ids.extend(ids)
             all_labels.extend(labels.detach().cpu().tolist())
-            all_scores_p1.extend(score_p1.detach().cpu().tolist())
+            all_scores_p_attack.extend(score_p_attack.detach().cpu().tolist())
 
-    all_scores = _apply_score_transform(all_scores_p1, score_transform)
+    all_scores = _apply_score_transform(all_scores_p_attack, score_transform)
     if val_threshold is None:
         metrics = _compute_metrics_no_threshold(all_labels, all_scores)
     else:
@@ -329,24 +355,32 @@ def main() -> None:
             )
 
     suffix = "_norm" if args.normalize_infer else ""
-    pred_path = run_dir / f"predictions_{split_name}{suffix}.jsonl"
+    evaluation_key = f"{split_name}{suffix}"
+    pred_path = run_dir / f"predictions_{evaluation_key}.jsonl"
     _write_predictions(pred_path, all_ids, all_labels, all_scores)
 
-    metrics_path = run_dir / f"final_metrics_{split_name}{suffix}.json"
+    metrics_path = run_dir / f"final_metrics_{evaluation_key}.json"
     metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
-    cfg[f"{split_name}_path"] = str(data_path.resolve())
-    evaluated = cfg.get("evaluated_splits")
-    if isinstance(evaluated, list):
-        if split_name not in evaluated:
-            evaluated.append(split_name)
-    else:
-        cfg["evaluated_splits"] = [split_name]
-    cfg["score_is_attack_prob"] = True
-    cfg["score_transform"] = score_transform
-    (run_dir / "config.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    manifest_payload = {
+        "split_name": split_name,
+        "data_path": str(data_path.resolve()),
+        "predictions_path": str(pred_path.resolve()),
+        "metrics_path": str(metrics_path.resolve()),
+        "normalize_infer": bool(args.normalize_infer),
+        "normalize_drop_mn": bool(args.normalize_drop_mn),
+        "score_transform": score_transform,
+        "score_is_attack_prob": True,
+        "threshold_source": metrics.get("threshold_source"),
+        "threshold": metrics.get("threshold"),
+        "target_fpr": target_fpr,
+        "evaluated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    manifest_path = _write_evaluation_manifest(run_dir, evaluation_key, manifest_payload)
 
-    print(f"Wrote {pred_path.name} and {metrics_path.name} in {run_dir}")
+    print(
+        f"Wrote {pred_path.name}, {metrics_path.name}, and {manifest_path.name} in {run_dir}"
+    )
 
 
 if __name__ == "__main__":

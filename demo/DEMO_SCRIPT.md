@@ -1,7 +1,11 @@
-# Grader-Proof Demo Script (CLI-Only, Local)
+﻿# Grader-Proof Demo Script (CLI-Only, Local)
 
 Primary mode:
 - local CLI (`jbd`) with default `rules` detector.
+
+State this before starting:
+- the live demo uses the rules baseline because it is deterministic and offline-safe
+- the final LoRA thesis run is `week7_norm_only`, which meets the validation target but does not maintain low FPR on JailbreakBench
 
 ## 1) Setup
 
@@ -123,3 +127,16 @@ Fallback B:
 
 Fallback C (optional recording prep):
 - record terminal session with sections 2-7 as a backup walkthrough.
+
+## 10) Thesis claim boundary
+
+If asked about the final ML model, use these exact numbers from `runs/week7_norm_only`:
+
+- `val`: FPR `0.0094`, TPR `0.9696`
+- `test_main`: FPR `0.0311`, TPR `0.9869`
+- `test_jbb`: FPR `0.5816`, TPR `0.9798`
+
+Correct framing:
+- good discrimination on the project validation/main distribution
+- poor threshold transfer under holdout distribution shift
+- suitable for capstone analysis and reproducible benchmarking, not for production deployment

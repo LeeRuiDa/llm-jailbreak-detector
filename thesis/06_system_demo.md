@@ -1,4 +1,4 @@
-# 6. System Demonstration
+﻿# 6. System Demonstration
 
 ## 6.1 Overview and deployment context
 The delivered system is a local jailbreak/prompt-injection detector with a CLI-first interface (`jbd`) and two runtime detector backends: rules baseline and optional LoRA classifier (`src/llm_jailbreak_detector/cli.py`, `src/llm_jailbreak_detector/predict.py`).
@@ -103,6 +103,12 @@ Seed and config controls:
 Hardware notes:
 - CPU-only path is sufficient for rules-mode demo.
 - LoRA training/eval scripts can use CUDA when available; final run metadata records device and commit (`runs/week7_norm_only/config.json`).
+
+### Claim boundary for defense and submission
+- The selected final run is `week7_norm_only`, not the older `lora_v1_microsoft-deberta-v3-base_u0_20260118_153344` run referenced in early draft materials.
+- Validation meets the target-FPR design point (`val` FPR `0.0094`), but transferred false-positive rates rise to `0.0311` on `test_main` and `0.5816` on `test_jbb` (`runs/week7_norm_only/final_metrics_val.json`, `runs/week7_norm_only/final_metrics_test_main.json`, `runs/week7_norm_only/final_metrics_test_jbb.json`).
+- Therefore the correct thesis claim is limited to reproducible detection performance on the project distribution and honest measurement of failure under distribution shift.
+- The system should not be described as production-ready, distribution-robust, or deployment-calibrated across unseen jailbreak datasets.
 
 ### Paper-System-Repo traceability matrix
 

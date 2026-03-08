@@ -18,14 +18,14 @@ from src.preprocess.unicode import normalize_text
 
 try:
     import datasets
-    import fsspec
+
     import huggingface_hub
     from datasets import load_dataset
     from huggingface_hub import HfApi
 except ImportError as e:
     raise SystemExit(
-        "Missing dependency: datasets/huggingface_hub/fsspec. "
-        "Install with `pip install datasets huggingface_hub fsspec`."
+        "Missing dependency: datasets/huggingface_hub. "
+        "Install with `pip install datasets huggingface_hub`."
     ) from e
 
 

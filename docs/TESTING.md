@@ -1,4 +1,4 @@
-# Testing
+﻿# Testing
 
 ## Run tests
 
@@ -16,10 +16,16 @@ pip install -e .
 
 - Normalization behavior (NFKC + Cf/Mn stripping)
 - Rules detector predictions
-- CLI smoke: `jbd --help` and `jbd predict --detector rules`
+- CLI smoke coverage for:
+  - `jbd --help`
+  - `jbd doctor`
+  - `jbd predict --detector rules`
+  - `jbd batch --detector rules`
+  - invalid JSONL failure path
+  - missing `--run_dir` failure path for LoRA
 
 ## Not covered yet
 
 - LoRA inference (requires local weights)
-- Batch CLI outputs on large files
 - Performance profiling or GPU execution
+- End-to-end reproduction of Week 7 training runs in CI

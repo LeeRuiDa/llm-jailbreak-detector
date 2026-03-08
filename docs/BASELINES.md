@@ -1,4 +1,6 @@
-# Baselines
+﻿# Baselines
+
+This document records historical baseline comparisons. The selected final Week 7 thesis run is `runs/week7_norm_only`, documented in `README.md`, `reports/week7/WEEK7_FINAL.md`, and `reports/week7/locked_eval_pack/week7_norm_only/`.
 
 ## Week 2 results (v1)
 
@@ -43,7 +45,7 @@ python scripts/eval_with_val_threshold.py --val_predictions runs/rules_val_u1/pr
 ```
 
 LoRA baseline (run the notebook twice with USE_UNICODE off/on):
-- `Untitled-2_fixed_eval.ipynb`
+- `notebooks/capstone_colab_lora.ipynb`
 
 Optional: rebuild the combined table:
 ```bash

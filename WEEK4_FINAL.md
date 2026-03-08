@@ -1,4 +1,6 @@
-# Week 4 Final (Frozen)
+# Week 4 Final (Historical Snapshot)
+
+This file is retained as a historical Week 4 artifact only. The final thesis-selected run is `runs/week7_norm_only`.
 
 final_run_id: lora_v1_microsoft-deberta-v3-base_u0_20260118_153344
 

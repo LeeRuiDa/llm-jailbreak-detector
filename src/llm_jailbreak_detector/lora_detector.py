@@ -47,7 +47,7 @@ class LoraDetector:
         try:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer
             from peft import PeftModel
-            import torch
+
         except ImportError as exc:
             raise RuntimeError(
                 "LoRA dependencies not installed. Run pip install .[lora]."
