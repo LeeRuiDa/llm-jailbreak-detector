@@ -1,0 +1,15 @@
+﻿\begin{table}[t]
+\centering
+\caption{Observed local runtime and availability measurements for the shipped detector backends. These are library-level CPU timings from \texttt{Predictor.predict()}, not full CLI wall-clock measurements.}
+\label{tab:runtime_benchmark}
+\scriptsize
+\begin{tabularx}{\textwidth}{p{0.12\textwidth}p{0.18\textwidth}p{0.17\textwidth}p{0.17\textwidth}X}
+\toprule
+Mode & Threshold policy & Benign mean / p95 & Attack mean / p95 & Availability note \\
+\midrule
+Rules & Fixed $0.5$ & $0.0032$ ms / $0.0034$ ms & $0.0009$ ms / $0.0010$ ms & Measured over 80 repeated CPU calls on the current Windows 11 / Python 3.12.10 submission workspace; always-available demo path. \\
+LoRA & Stored validation threshold (\texttt{val}) & N/A & N/A & Benchmark attempt failed cleanly because the local backbone files were not present in the Hugging Face cache. This confirms that the shipped runtime does not make hidden downloads and that LoRA remains artifact-dependent. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}

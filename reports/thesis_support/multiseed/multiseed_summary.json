@@ -1,0 +1,362 @@
+[
+  {
+    "split": "val",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.9981666067236855,
+    "std": 0.00023586754604311853,
+    "ci95": 0.0002669092547541382
+  },
+  {
+    "split": "val",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.998128771443343,
+    "std": 0.00027416443455496723,
+    "ci95": 0.00031024626378136245
+  },
+  {
+    "split": "val",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.00973393900064893,
+    "std": 0.0,
+    "ci95": 0.0
+  },
+  {
+    "split": "val",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.9696869488536155,
+    "std": 0.0038041080085399405,
+    "ci95": 0.004304753454203614
+  },
+  {
+    "split": "val",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.030313051146384478,
+    "std": 0.003804108008539992,
+    "ci95": 0.004304753454203672
+  },
+  {
+    "split": "test_main",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.9958089867022598,
+    "std": 0.0004215269736848904,
+    "ci95": 0.00047700267498621316
+  },
+  {
+    "split": "test_main",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.9995485036806216,
+    "std": 4.8924731029307774e-05,
+    "ci95": 5.536354499440973e-05
+  },
+  {
+    "split": "test_main",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.04024997351975426,
+    "std": 0.008904925138008135,
+    "ci95": 0.010076871414063226
+  },
+  {
+    "split": "test_main",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.9924570644889817,
+    "std": 0.005460654489463478,
+    "ci95": 0.0061793122653088246
+  },
+  {
+    "split": "test_main",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.007542935511018297,
+    "std": 0.005460654489463487,
+    "ci95": 0.006179312265308834
+  },
+  {
+    "split": "test_jbb",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.9100872672301245,
+    "std": 0.010687843587778802,
+    "ci95": 0.012094433570022985
+  },
+  {
+    "split": "test_jbb",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.8977943509319833,
+    "std": 0.020665516854699424,
+    "ci95": 0.023385233769246786
+  },
+  {
+    "split": "test_jbb",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.608843537414966,
+    "std": 0.1027188358540238,
+    "ci95": 0.11623730516108463
+  },
+  {
+    "split": "test_jbb",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.9865319865319866,
+    "std": 0.005831820900905348,
+    "ci95": 0.006599326599326642
+  },
+  {
+    "split": "test_jbb",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.01346801346801347,
+    "std": 0.005831820900905311,
+    "ci95": 0.0065993265993266005
+  },
+  {
+    "split": "test_main_unicode",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.9945967109334366,
+    "std": 0.0005033421136401682,
+    "ci95": 0.0005695852214170676
+  },
+  {
+    "split": "test_main_unicode",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.9994103233738237,
+    "std": 6.881203572251043e-05,
+    "ci95": 7.786814880183998e-05
+  },
+  {
+    "split": "test_main_unicode",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.0496769410020125,
+    "std": 0.010716356207979442,
+    "ci95": 0.012126698637161343
+  },
+  {
+    "split": "test_main_unicode",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.990867437583767,
+    "std": 0.006200782013942931,
+    "ci95": 0.007016845403274837
+  },
+  {
+    "split": "test_main_unicode",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.009132562416232896,
+    "std": 0.0062007820139429425,
+    "ci95": 0.007016845403274849
+  },
+  {
+    "split": "test_jbb_unicode",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.8851783137497423,
+    "std": 0.020718147036490973,
+    "ci95": 0.02344479042651149
+  },
+  {
+    "split": "test_jbb_unicode",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.8662232993258525,
+    "std": 0.04624527911345409,
+    "ci95": 0.052331459716008104
+  },
+  {
+    "split": "test_jbb_unicode",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.6564625850340136,
+    "std": 0.09258950740691296,
+    "ci95": 0.10477489097001146
+  },
+  {
+    "split": "test_jbb_unicode",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.9764309764309764,
+    "std": 0.015429547794464147,
+    "ci95": 0.01746017700231182
+  },
+  {
+    "split": "test_jbb_unicode",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.023569023569023573,
+    "std": 0.01542954779446411,
+    "ci95": 0.01746017700231178
+  },
+  {
+    "split": "test_main_adv2",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.7693306396395592,
+    "std": 0.12648576085172664,
+    "ci95": 0.14313211262974204
+  },
+  {
+    "split": "test_main_adv2",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.9605833067542564,
+    "std": 0.021493716907129763,
+    "ci95": 0.02432243035474528
+  },
+  {
+    "split": "test_main_adv2",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.6103167037390107,
+    "std": 0.18823380565902517,
+    "ci95": 0.21300660320093873
+  },
+  {
+    "split": "test_main_adv2",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.9924778439256512,
+    "std": 0.010815487193569524,
+    "ci95": 0.012238875907543656
+  },
+  {
+    "split": "test_main_adv2",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.007522156074348824,
+    "std": 0.010815487193569534,
+    "ci95": 0.012238875907543668
+  },
+  {
+    "split": "test_jbb_adv2",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.6211090496804782,
+    "std": 0.010891983826354342,
+    "ci95": 0.01232543999654327
+  },
+  {
+    "split": "test_jbb_adv2",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.6128950452469399,
+    "std": 0.010401936078074108,
+    "ci95": 0.011770898765747958
+  },
+  {
+    "split": "test_jbb_adv2",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.6904761904761905,
+    "std": 0.4128977117141094,
+    "ci95": 0.4672377458116062
+  },
+  {
+    "split": "test_jbb_adv2",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.744107744107744,
+    "std": 0.34878969733549225,
+    "ci95": 0.39469269826854053
+  },
+  {
+    "split": "test_jbb_adv2",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.2558922558922559,
+    "std": 0.34878969733549225,
+    "ci95": 0.39469269826854053
+  },
+  {
+    "split": "test_main_rewrite",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.9934185690374647,
+    "std": 0.001320336350096001,
+    "ci95": 0.0014941012324115974
+  },
+  {
+    "split": "test_main_rewrite",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.9992495877894237,
+    "std": 0.00016760141566166153,
+    "ci95": 0.00018965885599969237
+  },
+  {
+    "split": "test_main_rewrite",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.06058680224552484,
+    "std": 0.004716755445019023,
+    "ci95": 0.005337511250731398
+  },
+  {
+    "split": "test_main_rewrite",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.9946908539309499,
+    "std": 0.002611025312071504,
+    "ci95": 0.0029546532868994025
+  },
+  {
+    "split": "test_main_rewrite",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.0053091460690500684,
+    "std": 0.002611025312071498,
+    "ci95": 0.002954653286899396
+  },
+  {
+    "split": "test_jbb_rewrite",
+    "metric": "auroc",
+    "n_runs": 3,
+    "mean": 0.8958633958633958,
+    "std": 0.018183387948794743,
+    "ci95": 0.020576440496951443
+  },
+  {
+    "split": "test_jbb_rewrite",
+    "metric": "auprc",
+    "n_runs": 3,
+    "mean": 0.873339941843108,
+    "std": 0.046147036070491476,
+    "ci95": 0.052220287247299185
+  },
+  {
+    "split": "test_jbb_rewrite",
+    "metric": "fpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.6122448979591837,
+    "std": 0.0714285714285714,
+    "ci95": 0.08082903768654758
+  },
+  {
+    "split": "test_jbb_rewrite",
+    "metric": "tpr_at_val_threshold",
+    "n_runs": 3,
+    "mean": 0.9831649831649831,
+    "std": 0.005831820900905348,
+    "ci95": 0.006599326599326642
+  },
+  {
+    "split": "test_jbb_rewrite",
+    "metric": "asr_at_threshold",
+    "n_runs": 3,
+    "mean": 0.016835016835016835,
+    "std": 0.005831820900905311,
+    "ci95": 0.0065993265993266005
+  }
+]

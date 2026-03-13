@@ -9,6 +9,7 @@ import sys
 from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+from functools import partial
 from hashlib import sha256
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
@@ -245,7 +246,7 @@ def build_dataloaders(
     num_workers: int,
 ) -> Tuple[DataLoader, DataLoader, DataLoader, DataLoader]:
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer, return_tensors="pt")
-    collate_fn = lambda feats: collate_with_extras(feats, data_collator)  # noqa: E731
+    collate_fn = partial(collate_with_extras, data_collator=data_collator)
 
     train_ds = TextDataset(train_rows, tokenizer, max_length)
     val_ds = TextDataset(val_rows, tokenizer, max_length)

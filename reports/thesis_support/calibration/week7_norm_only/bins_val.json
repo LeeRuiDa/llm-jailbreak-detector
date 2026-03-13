@@ -1,0 +1,72 @@
+[
+  {
+    "bin_low": 0.0,
+    "bin_high": 0.1,
+    "count": 3007,
+    "mean_score": 0.0036268161343093346,
+    "empirical_positive_rate": 0.008646491519787164
+  },
+  {
+    "bin_low": 0.1,
+    "bin_high": 0.2,
+    "count": 44,
+    "mean_score": 0.14717370508746666,
+    "empirical_positive_rate": 0.3181818181818182
+  },
+  {
+    "bin_low": 0.2,
+    "bin_high": 0.30000000000000004,
+    "count": 16,
+    "mean_score": 0.24460522830486298,
+    "empirical_positive_rate": 0.1875
+  },
+  {
+    "bin_low": 0.30000000000000004,
+    "bin_high": 0.4,
+    "count": 13,
+    "mean_score": 0.3489038967169248,
+    "empirical_positive_rate": 0.38461538461538464
+  },
+  {
+    "bin_low": 0.4,
+    "bin_high": 0.5,
+    "count": 20,
+    "mean_score": 0.4518782258033752,
+    "empirical_positive_rate": 0.6
+  },
+  {
+    "bin_low": 0.5,
+    "bin_high": 0.6000000000000001,
+    "count": 20,
+    "mean_score": 0.5424916118383407,
+    "empirical_positive_rate": 0.65
+  },
+  {
+    "bin_low": 0.6000000000000001,
+    "bin_high": 0.7000000000000001,
+    "count": 19,
+    "mean_score": 0.6525839127992329,
+    "empirical_positive_rate": 0.7894736842105263
+  },
+  {
+    "bin_low": 0.7000000000000001,
+    "bin_high": 0.8,
+    "count": 22,
+    "mean_score": 0.7501812306317416,
+    "empirical_positive_rate": 0.6363636363636364
+  },
+  {
+    "bin_low": 0.8,
+    "bin_high": 0.9,
+    "count": 35,
+    "mean_score": 0.8605935914175851,
+    "empirical_positive_rate": 0.8571428571428571
+  },
+  {
+    "bin_low": 0.9,
+    "bin_high": 1.0,
+    "count": 2910,
+    "mean_score": 0.9957095129178561,
+    "empirical_positive_rate": 0.9938144329896907
+  }
+]

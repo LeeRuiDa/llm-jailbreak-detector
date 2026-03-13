@@ -1,0 +1,72 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+Large language models (LLMs) are increasingly deployed as components inside larger applications rather than as standalone chat interfaces. Many systems assemble a final model input by combining a user prompt with retrieved passages, application-provided context, or tool outputs. In this setting, natural language becomes a control surface: untrusted strings can influence downstream behavior in ways that resemble injection flaws in traditional software systems. This creates practical risk for instruction takeover, policy bypass, and attempted secret or system-prompt extraction.
+
+This thesis studies prompt-layer guardrail detection. Given an input payload consisting of the user prompt plus any attached context, a detector assigns an attack-likelihood score and decides whether the payload should be flagged as an attack or treated as benign. The implemented system is a CLI-first, offline-capable detector with two runtime backends: a deterministic rules baseline and an optional learned LoRA classifier. Evaluation is grounded in a locked protocol where the decision threshold is learned on validation and transferred unchanged to held-out splits.
+
+Figure~\ref{fig:system_context} situates the detector in the intended application flow. The key scope boundary is that the detector screens text before a downstream LLM call; it does not claim to solve tool sandboxing, permissioning, or full application security.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9\linewidth]{ch1_system_context.png}
+  \caption{System context: the detector screens prompt and context before the downstream LLM call.}
+  \label{fig:system_context}
+\end{figure}
+
+\section{Background and threat model}
+
+This thesis considers two related prompt-layer threats. A \emph{jailbreak} is a prompt crafted to override policy or instruction hierarchy and induce disallowed behavior. A \emph{prompt injection} is an instruction embedded in text that becomes part of the model input because an application concatenates user prompt and context. In the direct case, the attacker controls the user prompt; in the indirect case, the malicious instruction is embedded in retrieved or attached context \cite{rababah2024sokprompthacking,abdelnabi2023promptinjection}.
+
+The central security concern is that LLM applications often treat all text in the context window as potentially instruction-bearing. When trusted instructions and untrusted content are mixed into one payload, the application may unintentionally expose its instruction boundary to adversarial text. This is the prompt-layer analogue of control-data confusion.
+
+\section{Why low false-positive rate matters}
+
+A detector is only useful if it is operationally tolerable. Excessive blocking of benign prompts creates user friction, hides system capability behind false alarms, and undermines trust in the guardrail itself. For that reason, the evaluation in this thesis is organized around a strict operating-point target of approximately 1\% FPR on validation. This target is a calibration goal, not a guarantee that a single fixed threshold will remain at 1\% under shift.
+
+This framing also clarifies the reporting strategy. Threshold-free metrics such as AUROC and AUPRC summarize ranking quality, but deployments run at a single threshold. The thesis therefore reports both ranking metrics and fixed-threshold metrics: FPR, TPR, and ASR (attack success rate, equal to the attack false-negative rate at the operating threshold).
+
+The resulting evaluation should be read as a threshold-transfer stress study rather than as a direct simulation of production traffic priors. Validation is used to learn the operating point, while the held-out splits are designed to expose shift and robustness failure. That design is appropriate for the thesis question, but it is not equivalent to measuring field performance on a benign-heavy production stream.
+
+\section{Project goals}
+
+The project goals are defined as delivered system and evaluation artifacts:
+\begin{enumerate}
+  \item Provide an offline-capable detector system with a CLI and Python library for single-prompt and batch scoring.
+  \item Calibrate a low-FPR operating threshold on validation and transfer it unchanged to held-out splits.
+  \item Produce an examiner-verifiable evidence bundle containing the final protocol, aggregate tables and figures, and sanitized error-case summaries.
+\end{enumerate}
+
+\section{Research questions and hypotheses}
+
+The thesis is organized around three research questions:
+\begin{itemize}
+  \item \textbf{RQ1.} How does a validation-calibrated threshold at FPR = 1\% transfer across held-out splits under distribution shift when applied unchanged?
+  \item \textbf{RQ2.} Which perturbation families most degrade low-FPR threshold-transfer stability under fixed operating-point evaluation?
+  \item \textbf{RQ3.} How does the project's fully offline rules baseline compare to the optional learned detector under the same runtime interface and evaluation constraints?
+\end{itemize}
+
+The corresponding hypotheses are:
+\begin{itemize}
+  \item \textbf{H1 (threshold drift).} A threshold calibrated on validation at 1\% FPR will drift on at least some held-out splits because calibration is not re-tuned per split.
+  \item \textbf{H2 (stress ordering).} adv2-style character perturbations will produce the largest degradation in threshold-transfer stability; Unicode perturbations will mostly affect calibration; rewrite perturbations will be milder on the main distribution.
+  \item \textbf{H3 (baseline vs learned).} The rules detector is a viable offline baseline for demos and transparency within the shipped runtime, while the learned detector provides stronger scoring when local artifacts are available.
+\end{itemize}
+
+\section{Contributions}
+
+This thesis contributes three distinct outputs, each with a different academic role:
+\begin{itemize}
+  \item \textbf{Empirical contribution.} The thesis shows that strong threshold-free ranking performance does not preserve a low-FPR operating point under distribution shift. In the locked Week~7 study, the selected run \texttt{week7\_norm\_only} remains strong on the main distribution but exhibits large benign false-positive drift on JBB-style and adv2-style inputs.
+  \item \textbf{Methodological contribution.} The thesis adopts a low-FPR threshold-transfer protocol in which the decision threshold is calibrated on validation and transferred unchanged to all held-out splits. This frames guardrail detection as an operating-point evaluation problem rather than a threshold-free leaderboard exercise.
+  \item \textbf{Systems contribution.} The project delivers an offline-capable jailbreak and prompt-injection detector with a common runtime interface for a rules baseline and an optional LoRA detector, together with a committed Week~7 locked evaluation pack containing source-of-truth tables, figures, sanitized error cases, and configuration and environment snapshots.
+\end{itemize}
+
+\section{Scope and claim boundary}
+
+The scope of this work is deliberately narrow. The detector screens a text payload before the downstream LLM call; it does not provide end-to-end application security guarantees, tool sandboxing, or full application security. The project does not claim robustness beyond the evaluated datasets and perturbation families, and it does not claim production readiness. The original proposal named comparison against external guardrails such as Llama Guard 2, Prompt Guard, and ProtectAI-style detectors; because no runnable local artifacts for those systems were available in the submission environment, the final thesis narrows scope openly to an offline reproducible detector study rather than overstating an undelivered benchmark. The strongest defensible statement is therefore precise: the shipped system and locked Week~7 pack provide explicit evidence of where a low-FPR operating point succeeds, where it drifts, and why that drift matters for deployment.
+
+\section{Thesis roadmap}
+
+Chapter~\ref{ch:related_work} surveys related work on jailbreaks, prompt injection, guardrails, and low-FPR evaluation. Chapter~\ref{ch:method} defines the task, data representation, preprocessing, detectors, metrics, and locked protocol. Chapter~\ref{ch:experiments} reports the final Week~7 experimental results and selection logic. Chapter~\ref{ch:robustness} analyzes robustness and threshold-transfer failure modes. Chapter~\ref{ch:system_demo} documents the system and demo implementation. Chapter~\ref{ch:limitations_ethics} discusses limitations, ethics, and safe deployment posture. Chapter~\ref{ch:conclusion} concludes and outlines future work.
+

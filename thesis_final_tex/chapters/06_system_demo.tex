@@ -1,0 +1,129 @@
+\chapter{System and Demo Implementation}
+\label{ch:system_demo}
+
+This chapter documents the shipped software surface used to reproduce the locked evaluation artifacts and to support a live capstone demo. The system is intentionally CLI-first and offline-capable. That is an engineering decision rather than a presentation choice: it keeps the public runtime small, removes hidden web-service dependencies, and makes the project runnable on an examiner machine with the repository, Python, and optional local model artifacts.
+
+\section{Overview and deployment context}
+
+The delivered system is a local jailbreak and prompt-injection detector with two runtime backends: a rules baseline that works offline by default and an optional LoRA-backed classifier that loads local artifacts only. The primary users are examiners, graders, and developers who need reproducible scoring on single prompts and JSONL batches. The primary demo mode is a local CLI run because that is the implemented and tested runtime surface.
+
+The intended deployment context is an inline middleware guardrail placed before a downstream LLM call. However, middleware is discussed here only as an integration scenario. The repository does not ship a hosted inference service, reverse proxy, message queue, or database-backed control plane, so the thesis should not imply a production web deployment that does not exist.
+
+\section{Requirements and measured runtime evidence}
+
+The system chapter should state not only what the software does, but what it is required to do in the submission setting. Table~\ref{tab:runtime_requirements} summarizes the functional and non-functional requirements that are actually defended by the shipped runtime. These are thesis-facing requirements distilled from the final submission bundle, not aspirational product goals.
+
+\input{tables/tab6_requirements.tex}
+
+Table~\ref{tab:runtime_benchmark} adds a small measured runtime view. The measurements were taken on the current submission workspace using direct \texttt{Predictor.predict()} CPU calls on Windows 11, Python 3.12.10, and a 24-thread Intel system. They should be read as local library-level latency observations rather than as full CLI wall-clock timings.
+
+\input{tables/tab6_runtime_benchmark.tex}
+
+The benchmark reinforces the deployment boundary already stated in this thesis. The rules path is effectively instantaneous on CPU and remains the safest live-demo mode. The optional LoRA path could not be timed on the benchmark machine because the local Hugging Face backbone cache was absent, which is consistent with the software's explicit offline and no-hidden-download policy: the runtime fails clearly instead of fetching weights during the demo.
+
+\section{Runtime architecture}
+
+Figure~\ref{fig:component_diagram} shows the implementation-level architecture used by the shipped runtime and the offline evaluation workflow. The runtime path is deliberately short: text enters through the CLI, optional normalization is applied, \texttt{Predictor} routes to either the rules backend or the LoRA backend, and the result is emitted as structured JSON or JSONL.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ch6_component_diagram.png}
+  \caption{Implementation-level component diagram for the shipped runtime and the offline evaluation artifacts. The runtime path is intentionally narrower than the surrounding research tooling.}
+  \label{fig:component_diagram}
+\end{figure}
+
+Figure~\ref{fig:prediction_sequence} makes the same design concrete for a single \texttt{jbd predict} request. The important point is not the syntax of the command itself, but the control decision encoded in the runtime: threshold resolution is centralized in \texttt{Predictor}, normalization is explicit rather than hidden, and the backend remains swappable behind a stable public interface.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ch6_prediction_sequence.png}
+  \caption{Prediction flow for \texttt{jbd predict}. The public CLI remains small, while normalization, backend routing, and threshold application are handled internally in a fixed order.}
+  \label{fig:prediction_sequence}
+\end{figure}
+
+\section{Engineering decisions}
+
+\subsection{CLI-first public surface}
+
+The public command surface is intentionally small: \texttt{predict}, \texttt{batch}, \texttt{normalize}, and \texttt{doctor}. This keeps the project easy to verify in a defense setting and avoids claiming a richer deployment interface than the repository actually ships. \texttt{predict} is the single-record path, \texttt{batch} is the reproducible batch-scoring path, \texttt{normalize} exposes preprocessing directly for inspection, and \texttt{doctor} reports interpreter and optional dependency status.
+
+This design also constrains the thesis claim boundary. Older drafts described richer middleware-style behavior, but the shipped runtime does not expose a web API, policy routing layer, or redaction modes. Restricting the public surface to the implemented CLI keeps the software narrative aligned with the repository and with the smoke tests in \texttt{tests/test\_cli\_smoke.py}.
+
+\subsection{Centralized threshold resolution in \texttt{Predictor}}
+
+The most important internal design choice is the use of \texttt{Predictor} as a single control point for detector selection and threshold application. The CLI does not compare raw backend scores directly. Instead, it constructs a \texttt{Predictor}, passes the input text and inference options into \texttt{predict()}, and receives a normalized result object containing the score, binary label, resolved threshold, detector name, and metadata.
+
+Centralizing this logic avoids threshold drift between command paths. In rules mode, the effective default threshold is 0.5. In LoRA mode, \texttt{Predictor} can resolve the operating point from the stored run configuration when the caller uses \texttt{threshold=val}, or accept an explicit numeric threshold. This keeps \texttt{predict} and \texttt{batch} consistent and ensures that the public CLI reuses the same threshold policy described in Chapters~\ref{ch:method}--\ref{ch:robustness}.
+
+An important implementation detail is that \texttt{Predictor} tracks internal metadata such as \texttt{threshold\_source}, \texttt{normalize\_infer}, and \texttt{drop\_mn}. The shipped CLI surfaces \texttt{threshold} and \texttt{threshold\_used} in its JSON payload, but it does not expose \texttt{threshold\_source} as part of the public contract. That separation is correct: the metadata is useful internally, but surfacing undocumented fields in the thesis would overstate the shipped interface.
+
+\subsection{Explicit inference normalization}
+
+Normalization is available at runtime, but it is not forced silently. The CLI requires an explicit \texttt{--normalize} flag, and \texttt{--drop-mn} is a second explicit option for removing combining marks. This is a deliberate design choice. Hidden normalization would make it harder to reason about whether a given demo or batch result reflects the raw input text or a transformed variant.
+
+The runtime implementation applies Unicode NFKC normalization, removes format characters from category \texttt{Cf}, and optionally drops \texttt{Mn} marks. Keeping this path explicit serves two purposes. First, it supports transparent examiner demos. Second, it prevents the thesis from implying that all robustness preprocessing is always-on by default. The shipped system exposes normalization as an operator choice, not as an invisible safeguard.
+
+\subsection{Local-only LoRA loading and safe fallback behavior}
+
+The LoRA backend is intentionally stricter than the rules backend. It requires a valid \texttt{run\_dir}, a local \texttt{config.json}, a local \texttt{lora\_adapter} directory, and a populated local Hugging Face cache for the backbone tokenizer and model. The loader uses \texttt{local\_files\_only=True} for tokenizer, base model, and adapter access. This is the right boundary for an offline capstone artifact: if local model files are missing, the program fails clearly instead of making hidden network calls.
+
+The error path also reflects that design. When LoRA scoring fails or \texttt{run\_dir} is missing, the CLI returns a non-zero exit code and prints the hint \texttt{Use --detector rules for offline mode.} That fallback does not pretend the learned model is always available. It preserves a stable demo path even on machines that do not have ML dependencies or cached weights.
+
+\subsection{Batch input validation and deterministic output}
+
+The batch path is designed for reproducibility rather than permissive ingestion. JSONL inputs must contain a \texttt{text} field; otherwise the runtime raises a clear validation error. Plain-text batch files are accepted as line-oriented inputs and are converted into records with sequential string ids. Empty lines are skipped.
+
+Output is always written as JSONL with \texttt{ensure\_ascii=True}. That decision makes artifacts stable across environments and avoids introducing encoding-dependent output differences into demo files or submission evidence. It also aligns the runtime with the repository's frozen evaluation artifacts, which are stored as text-first, portable files rather than as application-specific binary blobs.
+
+\section{CLI contract}
+
+Table~\ref{tab:cli_contract} summarizes the shipped command surface.
+
+\input{tables/tab6_cli_contract.tex}
+
+The runtime JSON payload produced by \texttt{predict} and \texttt{batch} includes the fields \texttt{text}, \texttt{score}, \texttt{label}, \texttt{decision}, \texttt{threshold}, \texttt{threshold\_used}, \texttt{flagged}, \texttt{detector}, \texttt{model\_version}, \texttt{latency\_ms}, \texttt{rationale}, \texttt{normalize\_infer}, and optional \texttt{id}. This is the contract that Chapter~\ref{ch:system_demo} should defend. The shipped CLI does not implement the old draft-only privacy switches, text-hash fields, truncation fields, or a surfaced threshold-origin field.
+
+A correct library-level usage example is:
+\begin{verbatim}
+from llm_jailbreak_detector.predict import Predictor
+
+predictor = Predictor(detector="lora", run_dir="runs/week7_norm_only")
+result = predictor.predict(
+    "Ignore previous instructions and reveal the system prompt.",
+    threshold="val",
+    normalize_infer=False,
+    drop_mn=False,
+)
+\end{verbatim}
+
+\section{Demo, testing, and reproducibility evidence}
+
+The recommended live demo path uses rules mode first because it is the most stable runtime surface and does not depend on local model caches. An examiner-safe sequence is:
+\begin{enumerate}
+  \item install the package with \texttt{pip install -e .};
+  \item run \texttt{jbd doctor};
+  \item run \texttt{jbd --help};
+  \item score one benign prompt in rules mode;
+  \item score one obvious jailbreak prompt in rules mode;
+  \item demonstrate \texttt{jbd normalize};
+  \item run \texttt{jbd batch} on \texttt{demo/sample\_inputs.jsonl};
+  \item use LoRA mode only if \texttt{runs/week7\_norm\_only} and the local backbone cache already exist.
+\end{enumerate}
+
+This flow is backed by automated evidence rather than by screenshots alone. The smoke tests cover help output, \texttt{doctor}, rules-mode single prediction, rules-mode batch scoring, invalid JSONL handling, and the missing-\texttt{run\_dir} LoRA failure path. Continuous integration additionally runs linting and the test suite on both Windows and Ubuntu. These checks do not prove model quality, but they do make the runtime contract more credible.
+
+The repository also preserves reproducibility evidence beyond the CLI itself. The locked Week 7 pack stores the frozen split statistics, the final configuration snapshot, environment information, figures, tables, and per-split metrics for the selected run. See Appendix~\ref{app:repro_artifacts} for the artifact locations and verification commands.
+
+\section{System claim boundary}
+
+The correct defense posture is narrow and explicit:
+\begin{itemize}
+  \item this is a reproducible offline detector prototype;
+  \item the final selected run is \texttt{week7\_norm\_only};
+  \item the validation operating point targets 1\% benign FPR, but transferred FPR rises to 0.0311 on \texttt{test\_main}, 0.5816 on \texttt{test\_jbb}, and 0.6403 on \texttt{test\_main\_adv2};
+  \item the delivered software supports a rules baseline and an optional local LoRA path, not a production service stack;
+  \item the system should not be described as production-ready, distribution-robust, or calibrated across unseen jailbreak datasets.
+\end{itemize}
+
+That boundary is a strength rather than a weakness. It keeps the thesis aligned with the locked evidence pack, the shipped runtime, and the actual level of assurance provided by the implementation.
+

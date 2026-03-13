@@ -1,0 +1,123 @@
+\chapter{Robustness Analysis}
+\label{ch:robustness}
+
+This chapter focuses on the selected final model, \texttt{week7\_norm\_only}, under the fixed threshold learned on validation. The question is not whether the model can rank attacks above benign examples in distribution --- it often can --- but whether the same low-FPR operating point remains usable once the data distribution shifts.
+
+\section{Threat model and evaluation setting}
+
+All robustness claims in this chapter use the transferred validation threshold $\tau = 0.7340$ and the locked Week~7 counts. No split-specific recalibration is allowed. The perturbation families are:
+\begin{itemize}
+  \item \textbf{Unicode}: formatting and character-set obfuscation;
+  \item \textbf{adv2}: character-level noise such as homoglyph swaps, zero-width insertion, punctuation noise, and spacing noise;
+  \item \textbf{rewrite}: mild paraphrase-style lexical editing.
+\end{itemize}
+
+For a clean input $x$, the robustness study evaluates transformed variants of the form
+\begin{equation}
+  x' \in \{U_{\theta_u}(x), A_{\theta_a}(x), R_{\theta_r}(x)\},
+\end{equation}
+where $U_{\theta_u}$ is the Unicode obfuscation operator, $A_{\theta_a}$ is the adv2 character-noise operator, and $R_{\theta_r}$ is the rewrite operator. The labels of perturbed examples are inherited from their base examples when the variants are generated. This inheritance is exact for the surface-level Unicode and adv2 transforms, but only approximate for rewrite, which can sometimes soften or drift the meaning of the original prompt.
+
+\subsection{Perturbation operators}
+
+\paragraph{Unicode operator.}
+The Unicode transform applies two randomized edits while scanning the text. First, printable ASCII characters may be mapped to fullwidth forms with probability $p_{\mathrm{fw}} = 0.05$. Second, a zero-width space may be inserted after non-newline characters with probability $p_{\mathrm{zwsp}} = 0.02$. Formally,
+\begin{equation}
+  U_{\theta_u}(x) = \operatorname{insert\_zwsp}(\operatorname{fullwidth}(x; p_{\mathrm{fw}}); p_{\mathrm{zwsp}}),
+\end{equation}
+with $\theta_u = (p_{\mathrm{fw}}, p_{\mathrm{zwsp}})$. This operator is intended to preserve semantic content while disturbing tokenization and brittle lexical cues.
+
+\paragraph{adv2 operator.}
+The adv2 transform is a character-level noise process with independent local edits applied as the text is scanned. The default parameterization is
+\begin{equation}
+  \theta_a = (p_{\mathrm{case}}, p_{\mathrm{space}}, p_{\mathrm{punct}}, p_{\mathrm{hom}}, p_{\mathrm{mix}}, p_{\mathrm{zw}})
+  = (0.20, 0.08, 0.03, 0.06, 0.02, 0.03),
+\end{equation}
+with at most two zero-width insertions when the zero-width branch fires. The operator may flip case, add extra spaces after spaces, insert punctuation, replace characters with homoglyphs, insert mixed-script symbols, and insert zero-width characters. A compact definition is
+\begin{equation}
+  A_{\theta_a}(x) = \operatorname{compose}(\text{case flip},\text{ space insert},\text{ punctuation insert},\text{ homoglyph swap},\text{ mixed-script insert},\text{ zero-width insert})(x; \theta_a).
+\end{equation}
+This is the most aggressive perturbation family in the thesis and is designed to preserve task intent while making lexical matching and calibration harder.
+
+\paragraph{Rewrite operator.}
+The rewrite transform is a lightweight paraphrase proxy rather than a semantically controlled generative rewrite. It first swaps one adjacent sentence pair with probability $p_{\mathrm{swap}} = 0.15$, then performs token-level synonym substitution with probability $p_{\mathrm{syn}} = 0.15$ and filler-phrase insertion with probability $p_{\mathrm{fill}} = 0.08$. Formally,
+\begin{equation}
+  R_{\theta_r}(x) = \operatorname{token\_rewrite}(\operatorname{sentence\_swap}(x; p_{\mathrm{swap}}); p_{\mathrm{syn}}, p_{\mathrm{fill}}),
+\end{equation}
+with $\theta_r = (p_{\mathrm{syn}}, p_{\mathrm{fill}}, p_{\mathrm{swap}})$. Because this operator can change emphasis and local wording, its inherited labels should be read as a synthetic stress assumption rather than as a guarantee of perfectly preserved semantics.
+
+\input{tables/tab5_threshold_transfer.tex}
+
+Table~\ref{tab:threshold_transfer_summary} shows the central robustness result. Recall remains high on many splits, but benign false-positive control degrades sharply under shift. This is already visible on clean \texttt{test\_jbb}, and it becomes operationally severe under adv2.
+
+\section{Unicode, adv2, and rewrite behavior}
+
+\subsection{Unicode}
+
+Unicode perturbation increases false positives more than it harms recall. On \texttt{test\_main}, FPR rises from 0.0311 to 0.0429 while TPR remains essentially unchanged. On \texttt{test\_jbb}, the same trend is harsher: FPR rises from 0.5816 to 0.6531 without any compensating recall gain. The implication is that the locked configuration is more robust in ranking than in calibration.
+
+\subsection{adv2}
+
+adv2 is the decisive robustness failure mode. On \texttt{test\_main\_adv2}, recall remains extremely high (TPR = 0.9967), yet FPR inflates to 0.6403. On \texttt{test\_jbb\_adv2}, both sides of the operating point degrade: FPR reaches 0.8469 and TPR falls to 0.8990. In deployment terms, the detector would over-block benign traffic while still missing some obfuscated attacks. This is the strongest empirical reason the thesis must not describe the model as production-ready.
+
+\subsection{Rewrite}
+
+Rewrite is much milder on the main distribution. On \texttt{test\_main\_rewrite}, FPR is 0.0531 and TPR is 0.9902. However, rewrite does not fix cross-dataset shift: on \texttt{test\_jbb\_rewrite}, benign FPR remains 0.5714 even though TPR is still 0.9899.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.88\linewidth]{roc_week7_norm_only_test_jbb_adv2.png}
+  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_jbb\_adv2}. The red marker shows the transferred validation threshold $\tau = 0.7340$; even in the low-FPR inset, the operating point remains far from a usable benign-error regime.}
+  \label{fig:roc_jbb_adv2}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.88\linewidth]{hist_week7_norm_only_test_jbb_adv2.png}
+  \caption{Score histogram for \texttt{week7\_norm\_only} on \texttt{test\_jbb\_adv2}. The dashed red line marks the transferred threshold $\tau = 0.7340$; most benign examples fall into the block region, which yields 83 benign false positives out of 98.}
+  \label{fig:hist_jbb_adv2}
+\end{figure}
+
+\section{Small-sample caution on JBB}
+
+The JBB splits contain only 98 benign examples, so FPR is coarse: each extra benign false positive changes the reported FPR by about 1.02\%. The JBB results should therefore be treated as a stress signal rather than a high-precision estimate of deployment FPR. Even with that caution, the direction of the result is unambiguous: the transferred threshold is not stable on the JBB benign distribution.
+
+\section{Threshold and calibration sensitivity follow-up}
+
+Two post-lock analyses help separate ``bad threshold choice'' from ``bad threshold transfer.'' First, a local threshold sweep was run around the frozen validation threshold using the archived per-example predictions. Figure~\ref{fig:threshold_stability_followup} shows that the main-distribution operating point is fairly stable in a narrow neighborhood around $\tau = 0.7340$: on \texttt{test\_main}, FPR moves only from 0.0324 at $\tau - 0.05$ to 0.0308 at $\tau + 0.05$. The shifted splits behave very differently. Over the same sweep, \texttt{test\_jbb} remains between FPR = 0.6224 and 0.5714, \texttt{test\_main\_adv2} remains between 0.6498 and 0.6273, and \texttt{test\_jbb\_adv2} remains between 0.8469 and 0.8367. This means the dominant problem is not one unlucky threshold value; it is that shifted benign score distributions have moved so far that small threshold adjustments cannot recover a usable operating point.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\linewidth]{threshold_stability_followup.png}
+  \caption{Follow-up threshold sweep around the frozen validation threshold $\tau = 0.7340$. The main-distribution operating point is locally stable, but shifted splits remain in a high-FPR regime across the entire neighborhood.}
+  \label{fig:threshold_stability_followup}
+\end{figure}
+
+Second, a benign-heavy calibration sensitivity study resampled the validation negatives to simulate lower attack prevalence before recalibrating the threshold. Figure~\ref{fig:benign_heavy_sensitivity_followup} shows that the mean calibrated threshold rises from 0.7340 at the original validation balance to 0.7832 at attack prevalence 0.10 and 0.8075 at attack prevalence 0.05. This does reduce FPR slightly, but not enough to rescue the shifted splits. For example, \texttt{test\_main} FPR only falls from 0.0311 to 0.0300, \texttt{test\_jbb} from 0.5816 to 0.5653, \texttt{test\_main\_adv2} from 0.6403 to 0.6207, and \texttt{test\_jbb\_adv2} from 0.8469 to 0.8204. The trade-off is some recall loss, especially on the hardest shift. This supports a more precise robustness conclusion: calibration priors matter, but the dominant failure mode is still shifted score mass crossing the block threshold.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.90\linewidth]{benign_heavy_sensitivity_followup.png}
+  \caption{Follow-up benign-heavy calibration sensitivity. Recalibrating on increasingly benign-heavy validation slices raises the threshold and modestly lowers FPR, but it does not restore a low-FPR regime on JBB or adv2-shifted splits.}
+  \label{fig:benign_heavy_sensitivity_followup}
+\end{figure}
+
+\section{Implications for thesis claims}
+
+The robust conclusion is intentionally narrow:
+\begin{itemize}
+  \item The final model provides strong ranking quality and high recall on the main project distribution.
+  \item The locked evaluation pack reveals severe operating-point drift under distribution shift, especially on JBB and adv2-style perturbations.
+  \item The results do not support a claim that one fixed threshold generalizes robustly across unseen jailbreak corpora or obfuscation-heavy channels.
+\end{itemize}
+
+This narrow framing still yields a defensible contribution. The project delivers a reproducible offline detector study with a frozen baseline, a learned detector, a locked evaluation bundle, and explicit demonstration of threshold-transfer failure modes. That is academically stronger than overstating production readiness.
+
+\section{Mitigation directions}
+
+The results suggest three high-value follow-ups:
+\begin{enumerate}
+  \item introduce a benign-heavy calibration or development slice so the operating point better reflects deployment priors;
+  \item add hard-negative benign text that resembles JBB safety discussion and obfuscated benign prompts;
+  \item publish separate operating points for thesis reporting and live demo use rather than implying that one threshold is optimal everywhere.
+\end{enumerate}

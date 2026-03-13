@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Final-model threshold-transfer summary for \texttt{week7\_norm\_only}.}
+\label{tab:threshold_transfer_summary}
+\begin{tabular}{lrrrrr}
+\toprule
+Split & Benign & Attack & FPR@$\tau$ & TPR@$\tau$ & ASR@$\tau$ \\
+\midrule
+test\_main & 3,147 & 32,083 & 0.0311 & 0.9869 & 0.0131 \\
+test\_main\_unicode & 3,147 & 32,083 & 0.0429 & 0.9862 & 0.0138 \\
+test\_main\_adv2 & 3,147 & 32,083 & 0.6403 & 0.9967 & 0.0033 \\
+test\_main\_rewrite & 3,147 & 32,083 & 0.0531 & 0.9902 & 0.0098 \\
+test\_jbb & 98 & 99 & 0.5816 & 0.9798 & 0.0202 \\
+test\_jbb\_unicode & 98 & 99 & 0.6531 & 0.9798 & 0.0202 \\
+test\_jbb\_adv2 & 98 & 99 & 0.8469 & 0.8990 & 0.1010 \\
+test\_jbb\_rewrite & 98 & 99 & 0.5714 & 0.9899 & 0.0101 \\
+\bottomrule
+\end{tabular}
+\end{table}

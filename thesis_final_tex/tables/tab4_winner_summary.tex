@@ -1,0 +1,25 @@
+\begin{table}[t]
+\centering
+\caption{Winner-only summary for \texttt{week7\_norm\_only} at the transferred validation threshold $\tau = 0.7340$. This compact view isolates the final selected run from the broader Week~7 ablation tables.}
+\label{tab:winner_summary}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Split & AUROC & FPR@$\tau$ & TPR@$\tau$ & ASR@$\tau$ \\
+\midrule
+\texttt{val} & 0.9983 & 0.0094 & 0.9696 & 0.0304 \\
+\texttt{test\_main} & 0.9958 & 0.0311 & 0.9869 & 0.0131 \\
+\texttt{test\_jbb} & 0.8890 & 0.5816 & 0.9798 & 0.0202 \\
+\midrule
+\texttt{test\_main\_unicode} & 0.9949 & 0.0429 & 0.9862 & 0.0138 \\
+\texttt{test\_jbb\_unicode} & 0.8814 & 0.6531 & 0.9798 & 0.0202 \\
+\midrule
+\texttt{test\_main\_rewrite} & 0.9942 & 0.0531 & 0.9902 & 0.0098 \\
+\texttt{test\_jbb\_rewrite} & 0.8956 & 0.5714 & 0.9899 & 0.0101 \\
+\midrule
+\texttt{test\_main\_adv2} & 0.7133 & 0.6403 & 0.9967 & 0.0033 \\
+\texttt{test\_jbb\_adv2} & 0.6318 & 0.8469 & 0.8990 & 0.1010 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}

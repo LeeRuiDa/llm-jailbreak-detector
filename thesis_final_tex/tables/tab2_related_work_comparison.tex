@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Representative prior work compared with the scope of this thesis.}
+\label{tab:related_work_comparison}
+\scriptsize
+\begin{tabularx}{\textwidth}{p{0.18\textwidth}p{0.16\textwidth}p{0.17\textwidth}p{0.18\textwidth}X}
+\toprule
+Work & Primary focus & Guardrail or evaluation style & Strengths & Limitation relative to this thesis \\
+\midrule
+Rababah et al. (SoK) \cite{rababah2024sokprompthacking} & Survey and taxonomy of prompt hacking & Broad categorization of jailbreak and injection behavior & Strong threat framing and defense taxonomy & Does not provide a locked low-FPR threshold-transfer study or a reproducible offline detector artifact \\
+Abdelnabi et al. \cite{abdelnabi2023promptinjection} & Indirect prompt injection in real applications & Attack study against LLM-integrated systems & Grounds prompt injection in realistic retrieval and application pipelines & Focuses on attack feasibility rather than calibrated offline input detection under a fixed operating point \\
+Chao et al. (JailbreakBench) \cite{chao2024jailbreakbench} & Standardized jailbreak benchmarking & Benchmark-driven robustness evaluation & Improves comparability across jailbreak evaluations & Does not by itself answer how one validation-calibrated threshold transfers under low-FPR deployment constraints \\
+Inan et al. (Llama Guard) \cite{inan2023llamaguard} & Safety classifier for LLM interactions & Classifier-based input/output guardrail & Demonstrates practical classifier-style safeguarding & Not evaluated here as a runnable local benchmark artifact, and not positioned around this thesis's locked threshold-transfer protocol \\
+This thesis & Offline-capable prompt-layer input detection & Rules baseline plus optional LoRA detector under fixed threshold transfer & Combines reproducible local runtime, locked evaluation pack, and explicit low-FPR operating-point analysis & Narrower scope: no delivered external-guardrail bakeoff and no claim of production-ready robustness \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}

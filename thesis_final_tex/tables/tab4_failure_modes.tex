@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\caption{Sanitized failure-case categories derived from the locked Week~7 ranked error-case lists. Raw prompts are not reproduced; the table groups them into recurring patterns instead.}
+\label{tab:failure_modes}
+\scriptsize
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}X>{\raggedright\arraybackslash}p{0.20\textwidth}}
+\toprule
+Category & Locked-pack evidence & Observed pattern & Interpretation \\
+\midrule
+Obfuscated attack false negatives & \texttt{test\_main\_adv2\_fn.md}, \texttt{test\_jbb\_adv2\_fn.md} & Attack-labeled prompts about malware, identity theft, covert tracking, or physical harm are heavily corrupted by confusables, zero-width noise, and marker distortion yet still score far below $\tau$. & Character-level obfuscation can preserve malicious intent while driving the detector toward false negatives. \\
+Benign topical false positives & \texttt{test\_jbb\_adv2\_fp.md}, \texttt{test\_jbb\_rewrite\_fp.md} & Benign prompts discussing sensitive topics such as eating disorders, drugs, blackmail, or controversial ideologies receive scores near 1.0 when they retain high-risk vocabulary. & The detector overweights lexical overlap with unsafe intent, which is especially costly under cross-dataset shift. \\
+Structured benign false positives & \texttt{test\_main\_adv2\_fp.md}, \texttt{test\_main\_rewrite\_fp.md} & Tables, translation/code tasks, math word problems, and document-style snippets with noisy formatting are frequently classified as attacks. & Formatting corruption and mixed prompt-context structure can look attack-like even when the underlying task is benign. \\
+Rewrite semantic drift and ambiguity & \texttt{test\_main\_rewrite\_fn.md}, \texttt{test\_jbb\_rewrite\_fn.md} & Some attack-labeled rewrite examples read like innocuous wellness, factual, or generic assistance prompts after rewriting. & Rewrite-based robustness probes can partially change semantics, so some misses may reflect both model weakness and perturbation-induced label ambiguity. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}

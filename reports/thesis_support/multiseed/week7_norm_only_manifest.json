@@ -1,0 +1,17 @@
+[
+  {
+    "seed": 41,
+    "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only_ms_seed41",
+    "base_run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only"
+  },
+  {
+    "seed": 42,
+    "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only_ms_seed42",
+    "base_run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only"
+  },
+  {
+    "seed": 43,
+    "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only_ms_seed43",
+    "base_run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only"
+  }
+]

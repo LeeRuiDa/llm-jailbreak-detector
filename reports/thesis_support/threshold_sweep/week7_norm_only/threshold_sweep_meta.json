@@ -1,0 +1,12 @@
+{
+  "center_threshold": 0.7340390086174011,
+  "radius": 0.12,
+  "num_points": 49,
+  "splits": [
+    "val",
+    "test_main",
+    "test_jbb",
+    "test_main_adv2",
+    "test_jbb_adv2"
+  ]
+}

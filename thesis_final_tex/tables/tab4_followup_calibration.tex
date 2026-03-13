@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Follow-up calibration summary for the frozen \texttt{week7\_norm\_only} predictions. These values are computed from the archived per-example score files and are reported as post-lock analysis rather than as part of the original Week~7 pack.}
+\label{tab:followup_calibration}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Split & Prevalence & ECE & Brier \\
+\midrule
+\texttt{val} & 0.4953 & 0.0065 & 0.0133 \\
+\texttt{test\_main} & 0.9107 & 0.0087 & 0.0107 \\
+\texttt{test\_jbb} & 0.5025 & 0.3227 & 0.3042 \\
+\texttt{test\_main\_adv2} & 0.9107 & 0.0536 & 0.0587 \\
+\texttt{test\_jbb\_adv2} & 0.5025 & 0.4316 & 0.4350 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}

@@ -1,0 +1,131 @@
+\chapter{Experiments and Results}
+\label{ch:experiments}
+
+This chapter reports the final Week~7 results using the locked evaluation pack under a low-FPR operating-point protocol. Unless explicitly noted otherwise, all metrics are taken from the locked Week~7 evaluation bundle for \texttt{week7\_norm\_only}. The core distinction throughout the chapter is between ranking quality and fixed-threshold behavior under distribution shift.
+
+\section{Evaluation framing and split grid}
+
+The fixed Week~7 grid contains one validation split and two held-out evaluation families. Table~\ref{tab:exp_split_counts} repeats the authoritative counts used in this chapter.
+
+\input{tables/tab4_split_counts.tex}
+
+The evaluation naming requires care. Although the repository uses split names such as \texttt{test\_main} and \texttt{test\_jbb}, these distributions were inspected during Week~7 selection and ablation analysis. They are therefore treated as development-evaluation distributions rather than blind final-test sets. This thesis avoids language that would imply strict blind-test generalization.
+
+The main distribution, \texttt{test\_main}, is strongly attack-heavy, while validation is approximately balanced. This matters for interpretation: AUPRC is prevalence-sensitive, whereas fixed-threshold FPR and TPR remain the more deployment-relevant metrics.
+
+The present split grid should therefore be read as a threshold-transfer stress study, not as a benign-heavy production simulation. Validation is used to learn the operating point, \texttt{test\_main} measures transfer on the main project distribution, and JBB-style splits act as out-of-distribution stress tests. A benign-heavy deployment slice is not part of the locked Week~7 evidence, but it is revisited later in this chapter and Chapter~\ref{ch:robustness} as a follow-up sensitivity analysis.
+
+\section{Model selection summary}
+
+Week~7 ablations varied two training-time factors: \texttt{normalize\_train} and \texttt{aug\_adv2\_prob}. The selected run was \texttt{week7\_norm\_only}. It is not described as globally robust; rather, it was the least harmful operating point among the tested options. It retained strong clean-distribution recall without the severe JBB adv2 recall collapse seen under heavier adv2-oriented training.
+
+The rules baseline remains important for two reasons. First, it is the guaranteed runnable detector path in constrained environments. Second, it provides a transparent point of comparison for the learned model within the shipped runtime. Table~\ref{tab:rules_baseline_results} shows that the rules baseline offers almost no useful recall under the fixed threshold of 0.5, despite occasionally achieving very low FPR. Only splits with frozen rules-baseline artifacts are shown in the table; the thesis does not imply a broader comparator sweep than the repository actually contains.
+
+\input{tables/tab4_rules_baseline.tex}
+
+\section{Main locked-pack results}
+
+Table~\ref{tab:winner_summary} gives a compact winner-only view of the final selected run before the denser all-candidate Week~7 tables. This summary is the clearest single-table answer to the central empirical question of the thesis: the selected detector ranks well on the main project distribution, but its transferred threshold degrades sharply under cross-dataset shift and adv2-style perturbation.
+
+\input{tables/tab4_winner_summary.tex}
+
+Table~\ref{tab:clean_unicode_results} reports clean and Unicode results for all Week~7 candidate runs. The final row group of interest is \texttt{week7\_norm\_only}, whose validation threshold is 0.7340.
+
+\input{tables/tab4_clean_unicode.tex}
+
+Three observations from Table~\ref{tab:clean_unicode_results} matter most:
+\begin{enumerate}
+  \item On \texttt{test\_main}, ranking performance is strong and recall remains high at the transferred threshold.
+  \item Even on clean text, the transferred threshold does not preserve the 1\% FPR target: \texttt{test\_main} rises to 0.0311.
+  \item Cross-dataset shift dominates benign harm on \texttt{test\_jbb}, where the same threshold yields FPR = 0.5816 despite high recall.
+\end{enumerate}
+
+Table~\ref{tab:adv2_rewrite_results} shows that adv2 and rewrite stress very different aspects of the detector.
+
+\input{tables/tab4_adv2_rewrite.tex}
+
+The key empirical signature is the adv2 failure mode. For \texttt{week7\_norm\_only}, \texttt{test\_main\_adv2} has AUROC = 0.7133, FPR = 0.6403, and TPR = 0.9967. The detector still ranks many attacks above benign text, but the benign score distribution shifts badly enough that a fixed threshold becomes operationally unusable. By contrast, rewrite is much milder on the main distribution, though it does not solve the JBB false-positive problem. The plots below are regenerated from the frozen per-example prediction files so that the transferred threshold $\tau = 0.7340$ is marked explicitly rather than inferred only from the tables.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.88\linewidth]{roc_week7_norm_only_test_main_adv2.png}
+  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_main\_adv2}. The red marker shows the transferred validation threshold $\tau = 0.7340$; the inset makes clear that the chosen operating point sits far outside the low-FPR region even though the full curve still ranks attacks above benign text better than chance.}
+  \label{fig:roc_main_adv2}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.88\linewidth]{roc_week7_norm_only_test_main_rewrite.png}
+  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_main\_rewrite}. The red marker again shows the transferred threshold $\tau = 0.7340$; rewrite preserves a much cleaner ranking profile than adv2, but the operating point still misses the nominal 1\% benign-FPR target.}
+  \label{fig:roc_main_rewrite}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.88\linewidth]{hist_week7_norm_only_test_main_adv2.png}
+  \caption{Score histogram for \texttt{week7\_norm\_only} on \texttt{test\_main\_adv2}. The dashed red line marks the transferred threshold $\tau = 0.7340$; a large mass of benign scores shifts into the block region, explaining the observed FPR of 0.6403.}
+  \label{fig:hist_main_adv2}
+\end{figure}
+
+\section{Confusion-count and uncertainty view}
+
+Rates alone can hide how many benign prompts are actually harmed at the transferred threshold. Table~\ref{tab:confusion_counts} converts the stored FPR and TPR values for \texttt{week7\_norm\_only} into integer confusion-count summaries using the locked split counts. This makes the main failure modes more legible. On \texttt{test\_main}, the clean-distribution FPR of 0.0311 corresponds to 98 benign false positives out of 3,147 benign examples. On \texttt{test\_jbb}, the same transferred threshold flags 57 of only 98 benign examples, which is a much clearer statement of the practical harm than the rate alone.
+
+\input{tables/tab4_confusion_counts.tex}
+
+The adv2 pattern is even more concrete in count form. For \texttt{test\_main\_adv2}, the detector still blocks 31,976 of 32,083 attacks, but it also falsely flags 2,015 benign inputs. On \texttt{test\_jbb\_adv2}, only 15 benign examples remain unflagged. These counts reinforce the main thesis claim boundary: high recall under perturbation does not imply a usable operating point when benign-score drift is large.
+
+Because the main distribution is large and JBB is small, uncertainty differs sharply across splits. Table~\ref{tab:wilson_ci} restores the Wilson 95\% confidence intervals drafted earlier, computed on the relevant class subset for each thresholded metric. The intervals remain tight on the large \texttt{test\_main} family and much wider on the 98-benign / 99-attack JBB family. The JBB rows should therefore be read as strong stress signals, but not as high-precision estimates of the true deployment rate.
+
+\input{tables/tab4_wilson_ci.tex}
+
+\section{Follow-up calibration and seed-sensitivity analyses}
+
+The locked Week~7 pack remains the authoritative result bundle for this thesis. However, four follow-up analyses were run after the lock stage to test whether the core claim survives beyond one frozen table view: calibration curves, threshold sweeps, benign-heavy calibration sensitivity, and three-seed reruns of the selected configuration. These follow-up artifacts are indexed in Appendix~\ref{app:repro_artifacts}. They are reported here as additional evidence, not as replacement locked-pack results.
+
+Table~\ref{tab:followup_calibration} shows that score calibration is strong on \texttt{val} and \texttt{test\_main}, but it breaks sharply under cross-dataset and adv2 shift. On \texttt{val}, expected calibration error (ECE) is only 0.0065; on \texttt{test\_main} it remains low at 0.0087. By contrast, \texttt{test\_jbb} rises to 0.3227 and \texttt{test\_jbb\_adv2} to 0.4316. This matters because the thesis claim is not only that attacks rank above benign text, but that thresholded scores should remain interpretable enough to support low benign false-positive deployment. The follow-up calibration analysis supports the opposite conclusion under shift: score confidence itself becomes unreliable.
+
+\input{tables/tab4_followup_calibration.tex}
+
+The three-seed reruns reinforce the same claim from a different angle. Table~\ref{tab:followup_multiseed} shows that threshold-free ranking on the main distribution is stable across seeds, with \texttt{test\_main} AUROC = 0.9958 $\pm$ 0.0004. However, the transferred operating point is noticeably less stable. The mean \texttt{test\_main} benign FPR rises to 0.0402 $\pm$ 0.0089, above the single frozen-run value of 0.0311, and shifted splits remain highly variable. The per-seed validation thresholds also differ materially even though they all satisfy the same validation FPR target: seed~41 selects $\tau = 0.5199$, seed~42 selects $\tau = 0.7450$, and seed~43 selects $\tau = 0.6042$. This is strong evidence that the detector family is stable in ranking terms but unstable in transferred operating-point terms.
+
+\input{tables/tab4_followup_multiseed.tex}
+
+These reruns should be interpreted carefully. They were executed under the current repository code path after the locked Week~7 pack was frozen, so they are a follow-up sensitivity study rather than a new official winner selection process. That distinction does not weaken their value; it sharpens the thesis boundary. The follow-up evidence makes it harder to dismiss the locked-pack result as one unlucky run and instead supports the broader conclusion that threshold-transfer instability persists across random seeds once the evaluation distribution shifts.
+
+\section{Failure-case analysis}
+
+The locked pack also includes ranked false-positive and false-negative lists under \texttt{error\_cases/}. To avoid reproducing harmful prompts verbatim in the thesis, Table~\ref{tab:failure_modes} groups those lists into sanitized categories rather than quoting full examples. The table does not replace the raw evidence; it summarizes the recurring patterns seen in the stored error-case files.
+
+\input{tables/tab4_failure_modes.tex}
+
+Two patterns matter most for interpretation. First, the adv2 false-negative lists show that aggressive character-level corruption can preserve unsafe intent while pushing scores far below the transferred threshold. Second, the false-positive lists show that the model is easily provoked by benign prompts that contain high-risk topical vocabulary or noisy mixed-format context, especially on \texttt{test\_jbb} and the rewrite/adv2 variants.
+
+The rewrite false-negative files expose a more subtle issue: some attack-labeled rewrite outputs appear semantically diluted or partially converted into benign-seeming assistance requests. That does not invalidate the overall robustness result, but it does mean the rewrite condition should be interpreted as a synthetic stress test rather than a perfectly faithful model of attacker behavior. This is another reason the thesis claims a reproducible detector study, not a complete robustness guarantee.
+
+\section{Ablation interpretation}
+
+Table~\ref{tab:ablation_effects} aggregates the ablation outcomes across clean, Unicode, adv2, and rewrite condition groups.
+
+\input{tables/tab4_ablation.tex}
+
+The ablation confirms that there is no universally good configuration. Heavy adv2-oriented training improves some adv2 averages but can damage recall under the small JBB adv2 slice. The selected \texttt{week7\_norm\_only} configuration is therefore best understood as a compromise: it improves the overall harm profile relative to the alternatives, but it does not resolve threshold-transfer instability.
+
+\section{Proposal-compliance note on external guardrail comparison}
+
+The approved proposal explicitly named comparison against existing guardrails such as Llama Guard 2, Prompt Guard, and ProtectAI-style detectors in addition to a rules baseline. The final submission does \emph{not} present a reproducible benchmark against those external systems.
+
+That reduction is deliberate and is stated plainly here rather than hidden. During the final submission pass, the repository, the local Python environment, and the local Hugging Face cache were checked for runnable local artifacts corresponding to those proposal-named systems. No runnable local integration or cached model artifact was available in the submission environment, and a hosted API comparison would have violated the offline-first and examiner-reproducible framing of this project. The final thesis therefore narrows scope from an external-guardrail bakeoff to an offline reproducible detector study.
+
+\section{Interpretation and claim boundary}
+
+The strongest defensible statement from the Week~7 experiments is narrow:
+\begin{itemize}
+  \item \texttt{week7\_norm\_only} delivers strong ranking quality on the main project distribution.
+  \item The transferred threshold does not remain stable under distribution shift, especially on JailbreakBench-style benign traffic and adv2-style perturbations.
+  \item The Week~7 pack is a reproducible development-evaluation bundle rather than a blind final-test report.
+\end{itemize}
+
+This interpretation preserves academic honesty and aligns the thesis to the shipped system and locked evidence.
+
+

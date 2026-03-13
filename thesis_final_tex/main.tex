@@ -1,0 +1,76 @@
+\documentclass[12pt,oneside]{book}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+
+\graphicspath{{figures/}}
+\setstretch{1.25}
+\captionsetup{font=small,labelfont=bf}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  {\Large [University Name] \par}
+  \vspace{1cm}
+  {\large [Faculty or School Name] \par}
+  \vspace{2cm}
+  {\Huge\bfseries Offline-Capable Guardrail Detection for Jailbreak and Prompt Injection Inputs in Large Language Model Applications\par}
+  \vspace{1.5cm}
+  {\Large Capstone Thesis\par}
+  \vfill
+  \begin{tabular}{rl}
+    Author: & Lee Rui Da \\
+    Student ID: & [Student ID] \\
+    Supervisor: & [Supervisor Name] \\
+    Programme: & [Programme Name] \\
+    Submission Date: & March 2026 \\
+  \end{tabular}
+  \vfill
+\end{titlepage}
+
+\frontmatter
+\input{chapters/00_abstract}
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+\input{chapters/01_introduction}
+\input{chapters/02_related_work}
+\input{chapters/03_method}
+\input{chapters/04_experiments}
+\input{chapters/05_robustness}
+\input{chapters/06_system_demo}
+\input{chapters/07_limitations_ethics}
+\input{chapters/08_conclusion}
+
+\appendix
+\input{appendix/01_reproducibility_artifacts}
+\input{appendix/02_proposal_alignment}
+
+\backmatter
+\bibliographystyle{plainnat}
+\bibliography{bibliography/references}
+
+\end{document}
+
+

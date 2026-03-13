@@ -1,0 +1,902 @@
+[
+  {
+    "attack_prevalence": 0.495251,
+    "split": "calibration_slice",
+    "metric": "threshold",
+    "mean": 0.7340390086174011,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main",
+    "metric": "fpr",
+    "mean": 0.031140768986336193,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main",
+    "metric": "tpr",
+    "mean": 0.986940124053237,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main",
+    "metric": "asr",
+    "mean": 0.013059875946763083,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main",
+    "metric": "precision",
+    "mean": 0.9969145519803538,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb",
+    "metric": "fpr",
+    "mean": 0.5816326530612245,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb",
+    "metric": "tpr",
+    "mean": 0.9797979797979798,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb",
+    "metric": "asr",
+    "mean": 0.020202020202020204,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb",
+    "metric": "precision",
+    "mean": 0.6298701298701299,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_adv2",
+    "metric": "fpr",
+    "mean": 0.6402923419129329,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_adv2",
+    "metric": "tpr",
+    "mean": 0.9966649004145498,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_adv2",
+    "metric": "asr",
+    "mean": 0.0033350995854502384,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_adv2",
+    "metric": "precision",
+    "mean": 0.9407196022476538,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_adv2",
+    "metric": "fpr",
+    "mean": 0.8469387755102041,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_adv2",
+    "metric": "tpr",
+    "mean": 0.898989898989899,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_adv2",
+    "metric": "asr",
+    "mean": 0.10101010101010101,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_adv2",
+    "metric": "precision",
+    "mean": 0.5174418604651163,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_rewrite",
+    "metric": "fpr",
+    "mean": 0.053066412456307596,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_rewrite",
+    "metric": "tpr",
+    "mean": 0.9901505470186703,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_rewrite",
+    "metric": "asr",
+    "mean": 0.009849452981329675,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_main_rewrite",
+    "metric": "precision",
+    "mean": 0.9947704640821695,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_rewrite",
+    "metric": "fpr",
+    "mean": 0.5714285714285714,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_rewrite",
+    "metric": "tpr",
+    "mean": 0.98989898989899,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_rewrite",
+    "metric": "asr",
+    "mean": 0.010101010101010102,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.495251,
+    "split": "test_jbb_rewrite",
+    "metric": "precision",
+    "mean": 0.6363636363636364,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 1
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "calibration_slice",
+    "metric": "threshold",
+    "mean": 0.7383012712001801,
+    "std": 0.012395887676884045,
+    "ci95": 0.007683050780999117,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main",
+    "metric": "fpr",
+    "mean": 0.031108992691452175,
+    "std": 0.00010048546743464826,
+    "ci95": 6.228153797267241e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main",
+    "metric": "tpr",
+    "mean": 0.9868996041517315,
+    "std": 0.0001080230961823657,
+    "ci95": 6.695340867258417e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main",
+    "metric": "asr",
+    "mean": 0.013100395848268553,
+    "std": 0.00010802309618236041,
+    "ci95": 6.695340867258089e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main",
+    "metric": "precision",
+    "mean": 0.9969175655415214,
+    "std": 9.598180657004137e-06,
+    "ci95": 5.949014004901271e-06,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb",
+    "metric": "fpr",
+    "mean": 0.5816326530612245,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb",
+    "metric": "tpr",
+    "mean": 0.9797979797979798,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb",
+    "metric": "asr",
+    "mean": 0.020202020202020204,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb",
+    "metric": "precision",
+    "mean": 0.6298701298701299,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_adv2",
+    "metric": "fpr",
+    "mean": 0.6392119478868764,
+    "std": 0.0033063638199557835,
+    "ci95": 0.002049305527070091,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_adv2",
+    "metric": "tpr",
+    "mean": 0.9966337312595456,
+    "std": 8.815968346934551e-05,
+    "ci95": 5.464193792227486e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_adv2",
+    "metric": "asr",
+    "mean": 0.0033662687404544464,
+    "std": 8.81596834693199e-05,
+    "ci95": 5.464193792225899e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_adv2",
+    "metric": "precision",
+    "mean": 0.9408120663119149,
+    "std": 0.0002834023031463294,
+    "ci95": 0.00017565456732766122,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_adv2",
+    "metric": "fpr",
+    "mean": 0.8469387755102041,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_adv2",
+    "metric": "tpr",
+    "mean": 0.895959595959596,
+    "std": 0.009582659576267808,
+    "ci95": 0.005939393939393934,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_adv2",
+    "metric": "asr",
+    "mean": 0.10404040404040404,
+    "std": 0.00958265957626782,
+    "ci95": 0.005939393939393941,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_adv2",
+    "metric": "precision",
+    "mean": 0.5165852483831017,
+    "std": 0.0027088452503850457,
+    "ci95": 0.0016789596807485865,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_rewrite",
+    "metric": "fpr",
+    "mean": 0.052812202097235465,
+    "std": 0.0008038837394771861,
+    "ci95": 0.0004982523037813793,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_rewrite",
+    "metric": "tpr",
+    "mean": 0.9900975594551632,
+    "std": 0.00015691570653647815,
+    "ci95": 9.725736252872906e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_rewrite",
+    "metric": "asr",
+    "mean": 0.009902440544836829,
+    "std": 0.00015691570653647574,
+    "ci95": 9.725736252872757e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_main_rewrite",
+    "metric": "precision",
+    "mean": 0.9947951248949827,
+    "std": 7.804189587666365e-05,
+    "ci95": 4.83708682020402e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_rewrite",
+    "metric": "fpr",
+    "mean": 0.5714285714285714,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_rewrite",
+    "metric": "tpr",
+    "mean": 0.9888888888888889,
+    "std": 0.0031942198587559594,
+    "ci95": 0.0019797979797979925,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_rewrite",
+    "metric": "asr",
+    "mean": 0.011111111111111112,
+    "std": 0.003194219858755939,
+    "ci95": 0.00197979797979798,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.2,
+    "split": "test_jbb_rewrite",
+    "metric": "precision",
+    "mean": 0.6361259655377303,
+    "std": 0.0007515811432366984,
+    "ci95": 0.0004658348187759995,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "calibration_slice",
+    "metric": "threshold",
+    "mean": 0.7831970751285553,
+    "std": 0.052070012929393464,
+    "ci95": 0.03227332837565472,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main",
+    "metric": "fpr",
+    "mean": 0.030505243088655862,
+    "std": 0.0006699031162309884,
+    "ci95": 0.00041521025315114935,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main",
+    "metric": "tpr",
+    "mean": 0.9851790667954992,
+    "std": 0.0018571893978990826,
+    "ci95": 0.001151097914560855,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main",
+    "metric": "asr",
+    "mean": 0.014820933204500826,
+    "std": 0.0018571893978990602,
+    "ci95": 0.0011510979145608411,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main",
+    "metric": "precision",
+    "mean": 0.9969720492471965,
+    "std": 6.060768313661218e-05,
+    "ci95": 3.7565031193824606e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb",
+    "metric": "fpr",
+    "mean": 0.5765306122448979,
+    "std": 0.005378023231578883,
+    "ci95": 0.003333333333333337,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb",
+    "metric": "tpr",
+    "mean": 0.9797979797979798,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb",
+    "metric": "asr",
+    "mean": 0.020202020202020204,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb",
+    "metric": "precision",
+    "mean": 0.6319285289873525,
+    "std": 0.0021697431813677897,
+    "ci95": 0.0013448207565854378,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_adv2",
+    "metric": "fpr",
+    "mean": 0.6286304416904989,
+    "std": 0.012432118632248369,
+    "ci95": 0.007705506959787128,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_adv2",
+    "metric": "tpr",
+    "mean": 0.996325156625004,
+    "std": 0.0003588440861097665,
+    "ci95": 0.00022241386884973673,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_adv2",
+    "metric": "asr",
+    "mean": 0.0036748433749961037,
+    "std": 0.0003588440861097536,
+    "ci95": 0.00022241386884972876,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_adv2",
+    "metric": "precision",
+    "mean": 0.9417191127197286,
+    "std": 0.001065848197704289,
+    "ci95": 0.0006606195571672766,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_adv2",
+    "metric": "fpr",
+    "mean": 0.8367346938775511,
+    "std": 0.010756046463157766,
+    "ci95": 0.006666666666666674,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_adv2",
+    "metric": "tpr",
+    "mean": 0.8767676767676768,
+    "std": 0.023712884662167023,
+    "ci95": 0.014697398183362756,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_adv2",
+    "metric": "asr",
+    "mean": 0.12323232323232323,
+    "std": 0.023712884662167016,
+    "ci95": 0.01469739818336275,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_adv2",
+    "metric": "precision",
+    "mean": 0.5141535698820653,
+    "std": 0.0036304756606608695,
+    "ci95": 0.0022501921271886093,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_rewrite",
+    "metric": "fpr",
+    "mean": 0.050238322211630125,
+    "std": 0.0029900876263701274,
+    "ci95": 0.001853275511351965,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_rewrite",
+    "metric": "tpr",
+    "mean": 0.9894274226225727,
+    "std": 0.0007724530246769725,
+    "ci95": 0.0004787713449192348,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_rewrite",
+    "metric": "asr",
+    "mean": 0.010572577377427297,
+    "std": 0.0007724530246769638,
+    "ci95": 0.0004787713449192294,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_main_rewrite",
+    "metric": "precision",
+    "mean": 0.9950444609953618,
+    "std": 0.00028967154711301074,
+    "ci95": 0.00017954028499548967,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_rewrite",
+    "metric": "fpr",
+    "mean": 0.5663265306122449,
+    "std": 0.005378023231578883,
+    "ci95": 0.003333333333333337,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_rewrite",
+    "metric": "tpr",
+    "mean": 0.9848484848484849,
+    "std": 0.005323699764593266,
+    "ci95": 0.0032996632996633206,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_rewrite",
+    "metric": "asr",
+    "mean": 0.015151515151515152,
+    "std": 0.005323699764593232,
+    "ci95": 0.0032996632996633,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.1,
+    "split": "test_jbb_rewrite",
+    "metric": "precision",
+    "mean": 0.6372607655502392,
+    "std": 0.0009456571950264561,
+    "ci95": 0.0005861244019138922,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "calibration_slice",
+    "metric": "threshold",
+    "mean": 0.8074919402599334,
+    "std": 0.07037909208642794,
+    "ci95": 0.04362141320697746,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main",
+    "metric": "fpr",
+    "mean": 0.029965046075627583,
+    "std": 0.0013895444294975208,
+    "ci95": 0.0008612485602134393,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main",
+    "metric": "tpr",
+    "mean": 0.9844060717513948,
+    "std": 0.002391940171095785,
+    "ci95": 0.001482539877633044,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main",
+    "metric": "asr",
+    "mean": 0.01559392824860518,
+    "std": 0.0023919401710957816,
+    "ci95": 0.0014825398776330421,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main",
+    "metric": "precision",
+    "mean": 0.9970233634145054,
+    "std": 0.0001310940985475927,
+    "ci95": 8.125296408652501e-05,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb",
+    "metric": "fpr",
+    "mean": 0.5653061224489796,
+    "std": 0.028130711738959636,
+    "ci95": 0.017435595774162694,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb",
+    "metric": "tpr",
+    "mean": 0.9797979797979798,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb",
+    "metric": "asr",
+    "mean": 0.020202020202020204,
+    "std": 0.0,
+    "ci95": 0.0,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb",
+    "metric": "precision",
+    "mean": 0.6366777855100464,
+    "std": 0.011969402050358652,
+    "ci95": 0.00741871225104686,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_adv2",
+    "metric": "fpr",
+    "mean": 0.6206545916746108,
+    "std": 0.021883798010537827,
+    "ci95": 0.013563718531398754,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_adv2",
+    "metric": "tpr",
+    "mean": 0.9959885297509585,
+    "std": 0.0008482808954748762,
+    "ci95": 0.0005257699461603345,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_adv2",
+    "metric": "asr",
+    "mean": 0.004011470249041548,
+    "std": 0.0008482808954748691,
+    "ci95": 0.00052576994616033,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_adv2",
+    "metric": "precision",
+    "mean": 0.9424009895568011,
+    "std": 0.00187407030903658,
+    "ci95": 0.0011615608116828406,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_adv2",
+    "metric": "fpr",
+    "mean": 0.8204081632653062,
+    "std": 0.04593725990784799,
+    "ci95": 0.028472208672083502,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_adv2",
+    "metric": "tpr",
+    "mean": 0.8676767676767677,
+    "std": 0.029526143122415832,
+    "ci95": 0.018300493106242165,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_adv2",
+    "metric": "asr",
+    "mean": 0.13232323232323231,
+    "std": 0.029526143122415832,
+    "ci95": 0.018300493106242165,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_adv2",
+    "metric": "precision",
+    "mean": 0.5167829544326183,
+    "std": 0.010033679147435243,
+    "ci95": 0.006218938765777429,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_rewrite",
+    "metric": "fpr",
+    "mean": 0.04871306005719733,
+    "std": 0.004418441464914789,
+    "ci95": 0.00273857839250329,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_rewrite",
+    "metric": "tpr",
+    "mean": 0.9888632609169965,
+    "std": 0.0015170447528886197,
+    "ci95": 0.0009402740793809268,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_rewrite",
+    "metric": "asr",
+    "mean": 0.01113673908300346,
+    "std": 0.0015170447528886116,
+    "ci95": 0.0009402740793809218,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_main_rewrite",
+    "metric": "precision",
+    "mean": 0.9951919341714236,
+    "std": 0.000427517037921003,
+    "ci95": 0.0002649778053583533,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_rewrite",
+    "metric": "fpr",
+    "mean": 0.5561224489795918,
+    "std": 0.025110243299716655,
+    "ci95": 0.015563490039904994,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_rewrite",
+    "metric": "tpr",
+    "mean": 0.9828282828282828,
+    "std": 0.006817662199096514,
+    "ci95": 0.004225630809888356,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_rewrite",
+    "metric": "asr",
+    "mean": 0.01717171717171717,
+    "std": 0.006817662199096494,
+    "ci95": 0.004225630809888344,
+    "repeats": 10
+  },
+  {
+    "attack_prevalence": 0.05,
+    "split": "test_jbb_rewrite",
+    "metric": "precision",
+    "mean": 0.6411419457735247,
+    "std": 0.009480864489676794,
+    "ci95": 0.005876300691058567,
+    "repeats": 10
+  }
+]

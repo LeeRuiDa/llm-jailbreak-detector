@@ -1,0 +1,39 @@
+\chapter{Conclusion}
+\label{ch:conclusion}
+
+This thesis studied prompt-layer guardrail detection for LLM applications under a deployment-relevant constraint: operate at very low benign false-positive rate while remaining informative under common evasion tactics. The work framed jailbreaks and prompt injection, including indirect injection through attached context, as a binary detection problem over a single canonical text payload and delivered an offline-capable detector system that can be verified locally.
+
+The final selected run, \texttt{week7\_norm\_only}, confirms the central empirical tension of the project. At the frozen validation threshold $\tau = 0.7340$, validation benign FPR is 0.0094. On \texttt{test\_main}, the detector still achieves AUROC = 0.9958 and TPR = 0.9869, but benign FPR rises to 0.0311. Under stronger shift, the same fixed threshold becomes operationally unstable: FPR rises to 0.5816 on \texttt{test\_jbb}, 0.6403 on \texttt{test\_main\_adv2}, and 0.8469 on \texttt{test\_jbb\_adv2}. The main conclusion is therefore not simply that the model can rank attacks well. It is that ranking quality alone is insufficient evidence for a deployable low-FPR operating point.
+
+\section{Answers to the research questions}
+
+\textbf{RQ1: How does a validation-calibrated threshold at FPR = 1\% transfer across held-out splits under distribution shift when applied unchanged?}
+
+It does not transfer stably. The locked Week~7 protocol shows clear threshold drift once the validation threshold is moved to held-out distributions. The effect is moderate on \texttt{test\_main} but severe on JBB-style and adv2-style splits. Hypothesis H1 is supported.
+
+\textbf{RQ2: Which perturbation families most degrade low-FPR threshold-transfer stability under fixed operating-point evaluation?}
+
+adv2 is the strongest failure mode. It preserves very high recall on \texttt{test\_main\_adv2} while driving benign FPR to 0.6403, and on \texttt{test\_jbb\_adv2} it harms both benign control and recall. Unicode perturbations mostly damage calibration rather than recall, while rewrite is milder on the main distribution but does not rescue cross-dataset stability on JBB. Hypothesis H2 is supported.
+
+\textbf{RQ3: How does a fully offline rules baseline compare to an optional learned detector under the same decision interface and constraints?}
+
+The rules backend is useful as a guaranteed offline fallback, transparent sanity check, and examiner-safe demo path, but it is not a competitive detector on the evaluated splits. On \texttt{test\_main}, the rules baseline achieves AUROC = 0.5024 and TPR = 0.0064 at threshold 0.5, far below the learned detector. The learned detector therefore provides the only strong scoring path in this project, while the rules detector provides operational simplicity and reproducibility. Hypothesis H3 is only partially supported: the rules system is viable as a fallback and baseline, not as an effective substitute for the learned model.
+
+\section{Contributions recap}
+
+The final contribution set is specific and defensible:
+\begin{enumerate}
+  \item an offline-capable jailbreak and prompt-injection detector with a CLI and Python library;
+  \item two detector backends behind one runtime interface: an always-available rules baseline and an optional LoRA classifier loaded strictly from local artifacts;
+  \item a low-FPR evaluation protocol with validation threshold selection and strict threshold transfer to held-out splits;
+  \item a reproducible robustness study using Unicode, adv2, and rewrite perturbation families;
+  \item a committed Week~7 locked evaluation pack containing source-of-truth tables, figures, sanitized error cases, and configuration and environment snapshots.
+\end{enumerate}
+
+The methodological contribution is the most important one. The thesis shows that a guardrail can appear strong under threshold-free ranking metrics and still fail at the deployed operating point once the benign distribution changes. That is the main research result of the project.
+
+\section{Future work}
+
+The highest-value next steps are not cosmetic. First, calibration under shift should be improved using benign-heavy calibration slices, explicit hard-negative development sets, or carefully controlled post-hoc calibration methods. Second, robustness evaluation should extend to bounded adaptive attackers rather than only fixed synthetic perturbations. Third, the project should add more realistic benign traffic distributions, including multilingual and security-discussion hard negatives, to measure overblocking risk directly. Fourth, future work should consider publishing separate operating points for thesis reporting and live demo use instead of implying that one threshold is suitable everywhere. Finally, any future external-guardrail comparison should be attempted only when runnable local artifacts exist so that the benchmark remains reproducible in the submission environment.
+
+The final thesis is defensible because it stays within the evidence. It does not claim production readiness, adaptive robustness, or a completed external-guardrail bakeoff. It demonstrates something narrower but still meaningful: prompt-layer detection can be packaged as a reproducible offline system, and under a frozen low-FPR threshold-transfer protocol, strong AUROC does not prevent severe operating-point drift under distribution shift. That is the main lesson of the project and the main contribution that should survive defense.

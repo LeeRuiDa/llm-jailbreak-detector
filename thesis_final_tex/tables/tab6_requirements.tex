@@ -1,0 +1,23 @@
+﻿\begin{table}[t]
+\centering
+\caption{Core functional and non-functional requirements defended by the shipped runtime.}
+\label{tab:runtime_requirements}
+\scriptsize
+\begin{tabularx}{\textwidth}{p{0.1\textwidth}p{0.22\textwidth}X}
+\toprule
+ID & Requirement & Delivered evidence \\
+\midrule
+FR-1 & Single-record scoring & Delivered via \texttt{jbd predict} with the JSON payload documented in Table~\ref{tab:cli_contract}. \\
+FR-2 & Batch scoring & Delivered via \texttt{jbd batch} for both JSONL and TXT inputs, with deterministic JSONL output. \\
+FR-3 & Offline baseline detector & Delivered via the rules backend, which does not depend on external services or model downloads. \\
+FR-4 & Optional learned detector & Delivered via local-only LoRA loading from \texttt{run\_dir}, \texttt{config.json}, and \texttt{lora\_adapter}. \\
+FR-5 & Inspectable normalization & Delivered via \texttt{jbd normalize} and the explicit \texttt{--normalize}/\texttt{--drop-mn} inference flags. \\
+FR-6 & Demo-readiness diagnostics & Delivered via \texttt{jbd doctor} and the hostile-check flow documented in the testing appendix and user manual. \\
+NFR-1 & Default offline operation & Satisfied by the rules path; the runtime does not require hosted APIs for the required demo. \\
+NFR-2 & Reproducible operating point & Satisfied by stored \texttt{val\_operating\_point.json}, frozen metrics, and the locked Week~7 evidence pack. \\
+NFR-3 & Deterministic behavior & Satisfied for fixed inputs and artifacts, with latency as the only intentionally variable field. \\
+NFR-4 & Honest runtime surface & Satisfied by restricting public claims to the implemented CLI and excluding older draft-only flags or hidden services. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}

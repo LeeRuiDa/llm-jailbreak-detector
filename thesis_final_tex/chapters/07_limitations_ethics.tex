@@ -1,0 +1,62 @@
+\chapter{Limitations, Threats to Validity, and Ethical Considerations}
+\label{ch:limitations_ethics}
+
+This chapter separates research-validity risks from ethical and release considerations. That structure matters for defense. Some weaknesses affect what the empirical results mean, while others affect how the software and artifacts should be used. Keeping those categories distinct makes the thesis easier to defend honestly.
+
+\section{Threats to validity}
+
+\subsection{Construct validity}
+
+The thesis evaluates a specific operational object: a fixed threshold calibrated on the validation split and transferred unchanged to the remaining splits. This is a deployment-relevant choice, but it is narrower than a generic claim about prompt-security effectiveness. High AUROC or high recall under one operating point does not imply that the detector is broadly safe or calibrated across different benign traffic distributions.
+
+The robustness probes are also bounded constructions rather than exhaustive attacker models. Unicode perturbations cover a limited family of confusable, fullwidth, and zero-width transformations. adv2 is a randomized character-level noise process rather than an adaptive adversary. Rewrite is a lightweight paraphrase-style transformation, not a semantically controlled generative attack. The defensible claim is therefore limited to the implemented perturbation suites used in Chapters~\ref{ch:experiments} and \ref{ch:robustness}.
+
+A second construct-validity limit is the canonical text assembly itself. The project uses a fixed \texttt{[PROMPT]} / \texttt{[CONTEXT]} template, but the shipped preprocessing path does not explicitly enforce delimiter-token escaping as a deployed safeguard. The thesis therefore treats delimiter imitation as an unmitigated limitation rather than as a delivered defense.
+
+\subsection{Internal validity}
+
+The merged corpora used for training and evaluation come from heterogeneous sources with different style distributions, collection procedures, and labeling assumptions. Label ambiguity remains possible, especially for hard negatives such as benign discussion of system prompts, safety policy, or security research. Group-based split hygiene reduces leakage risk, but it does not eliminate every semantically overlapping prompt family.
+
+The model-selection process also limits internal validity. The Week~7 evaluation distributions were inspected during the final selection process, so they should be treated as development-evaluation splits rather than blind final tests. This thesis states that limitation explicitly instead of retroactively claiming strict blind-test validity.
+
+A further internal-validity limit is seed coverage. The frozen Week~7 winner still corresponds to one recorded seed, and that locked artifact remains the official result bundle. However, a three-seed follow-up rerun study was added after the lock stage and is discussed in Chapter~\ref{ch:experiments}. That follow-up improves the thesis by exposing seed sensitivity under shift, but it does not retroactively turn the locked pack into a multi-seed benchmark.
+
+\subsection{External validity}
+
+A major external-validity risk is distribution shift between the main corpus and the JBB-style holdout. The same validation-calibrated threshold behaves very differently across these distributions. This is not a secondary caveat; it is one of the central findings of the thesis and the main reason the system is not described as deployment-ready.
+
+The current evaluation also does not provide language-stratified performance reporting, even though multilingual and mixed-script inputs are relevant to prompt-layer attacks. Future work should report performance by language and script family and add multilingual hard negatives so that overblocking risk can be measured more directly.
+
+Adaptive attackers are also out of scope for the current evidence. The locked Week~7 pack is non-adaptive and does not test an attacker that probes the detector iteratively under a fixed query budget. The thesis therefore does not claim adaptive robustness.
+
+\subsection{Conclusion validity}
+
+The strongest conclusion-validity issue is uncertainty around low-count stress splits. The JBB benign subset contains only 98 examples, so each additional benign false positive changes FPR by about 1.02\%. That makes JBB an important stress signal but not a high-precision estimate of deployment benign harm.
+
+Chapter~\ref{ch:experiments} now reports confusion counts and Wilson intervals to reduce the risk of over-reading small-N results, but those intervals do not remove the underlying sample-size constraint. Similarly, the fixed-threshold results demonstrate a clear direction of failure under shift, but they should not be interpreted as a full estimate of operating performance across all unseen datasets.
+
+\section{Ethical and release considerations}
+
+\subsection{Privacy and operator handling}
+
+Prompt data may contain sensitive or personally identifiable information. The shipped CLI can print or persist raw text if the operator chooses to write output files, so safe usage requires disciplined handling of logs and review artifacts. The recommended posture is to minimize retention, restrict access, and avoid using real PII in demo or thesis artifacts.
+
+\subsection{Dual-use concerns}
+
+Publishing prompt-level attack corpora, detector thresholds, and failure patterns can help defenders, but it can also help attackers study weaknesses. For that reason, the submission distributes aggregate metrics, figures, and sanitized error-case summaries rather than raw datasets and full operational model artifacts.
+
+\subsection{Licensing and reproducibility constraints}
+
+The project relies on public datasets and open models, but raw redistribution is constrained by dataset-specific license and safety terms. The locked evaluation pack therefore packages aggregate results and metadata rather than redistributing all underlying prompts. This improves examiner auditability without assuming rights that the project may not hold.
+
+A second reproducibility constraint is local artifact dependence. Rules mode is fully offline and portable, but LoRA mode requires local run artifacts and a local backbone cache. The thesis treats rules mode as the guaranteed exam demo path for precisely this reason.
+
+\section{Proposal alignment and scope narrowing}
+
+The original proposal named comparison against existing guardrails such as Llama Guard 2, Prompt Guard, and ProtectAI-style detectors. The final submission does not claim that this external benchmark was delivered. During the submission pass, no runnable local artifact for those proposal-named systems was available in the repository or local submission environment, and a hosted API comparison would have violated the offline-first reproducibility posture of the project.
+
+This narrowing is real and is documented as a submission artifact rather than hidden in prose. Appendix~\ref{app:proposal_alignment} and Table~\ref{tab:proposal_alignment} summarize the delivered items, the narrowed item, and the evidence paths used to justify that status.
+
+\section{Summary}
+
+The thesis is defensible because its limitations are explicit and categorized correctly. Construct validity is bounded by the fixed-threshold operating object and the implemented perturbation families. Internal validity is limited by heterogeneous source corpora, non-blind selection, and the fact that the official frozen winner is still a single-seed artifact even though follow-up reruns were later added. External validity is limited most sharply by threshold-transfer failure under distribution shift and by the absence of adaptive evaluation. Ethical and release constraints require careful handling of prompt text and conservative artifact release. These limits do not invalidate the contribution; they define it honestly.

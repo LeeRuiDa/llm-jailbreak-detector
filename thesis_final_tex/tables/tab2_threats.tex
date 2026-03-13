@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Threats, evaluated defenses, and common weaknesses.}
+\label{tab:threats_defenses}
+\scriptsize
+\begin{tabularx}{\textwidth}{p{0.16\textwidth}p{0.13\textwidth}p{0.2\textwidth}p{0.2\textwidth}X}
+\toprule
+Threat / evasion tactic & Typical setting & Representative defenses in prior work & Defenses evaluated in this thesis & Common weaknesses / gaps \\
+\midrule
+Direct jailbreak prompts & Prompt-only & Alignment and refusal training, safety classifiers, rule filters, structured prompting, red-teaming suites & Rules baseline, learned classifier, low-FPR thresholding & Paraphrase and novel prompt patterns can evade brittle cues; calibration drifts under shift \\
+Direct prompt injection & Prompt-only & Same as jailbreak plus instruction-hierarchy enforcement & Same detector interface as jailbreak & Ambiguous boundary between benign discussion and malicious takeover language \\
+Indirect prompt injection & RAG / retrieved context & Context separation, trust scoring, retrieval filtering, input scanning & Single-payload scanning over prompt plus context & Malicious instructions can be embedded subtly inside attached context \\
+Unicode obfuscation & Any text channel & Normalization, confusable detection, canonicalization & NFKC/category stripping and optional preprocessing & Incomplete coverage; aggressive normalization can distort benign text \\
+Character noise (adv2-like) & Any text channel & Robust training, augmentation, character-level models & adv2 stress variants and ablations & Can distort tokenization and move benign mass above a fixed threshold \\
+Paraphrase / rewrite & Any text channel & Semantic models, paraphrase-robust training, ensembles & Rewrite stress variants and ablations & Rules are brittle; learned detectors may retain AUROC while drifting at the operating point \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}

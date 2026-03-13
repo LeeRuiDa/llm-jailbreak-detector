@@ -1,0 +1,31 @@
+\begin{table}[t]
+\centering
+\caption{Ablation summary grouped by clean, Unicode, adv2, and rewrite conditions.}
+\label{tab:ablation_effects}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+Run & Group & Mean AUROC & Mean AUPRC & Mean FPR & Mean TPR & Mean ASR & $\Delta$FPR vs control & $\Delta$TPR vs control & $\Delta$ASR vs control \\
+\midrule
+week7\_adv2\_only & clean & 0.9452 & 0.9468 & 0.3773 & 0.9935 & 0.0065 & 0.0658 & 0.0097 & -0.0097 \\
+week7\_adv2\_only & unicode & 0.9163 & 0.9157 & 0.4096 & 0.9985 & 0.0015 & 0.0365 & 0.0207 & -0.0207 \\
+week7\_adv2\_only & adv2 & 0.8124 & 0.8334 & 0.3809 & 0.8766 & 0.1234 & -0.4094 & -0.0847 & 0.0847 \\
+week7\_adv2\_only & rewrite & 0.9391 & 0.9454 & 0.3870 & 0.9938 & 0.0062 & 0.0591 & 0.0091 & -0.0091 \\
+week7\_control & clean & 0.9519 & 0.9514 & 0.3115 & 0.9838 & 0.0162 & 0.0000 & 0.0000 & 0.0000 \\
+week7\_control & unicode & 0.9404 & 0.9397 & 0.3732 & 0.9778 & 0.0222 & 0.0000 & 0.0000 & 0.0000 \\
+week7\_control & adv2 & 0.6277 & 0.7553 & 0.7903 & 0.9613 & 0.0387 & 0.0000 & 0.0000 & 0.0000 \\
+week7\_control & rewrite & 0.9463 & 0.9450 & 0.3279 & 0.9847 & 0.0153 & 0.0000 & 0.0000 & 0.0000 \\
+week7\_norm\_only & clean & 0.9424 & 0.9371 & 0.3064 & 0.9834 & 0.0166 & -0.0051 & -0.0004 & 0.0004 \\
+week7\_norm\_only & unicode & 0.9381 & 0.9349 & 0.3480 & 0.9830 & 0.0170 & -0.0252 & 0.0052 & -0.0052 \\
+week7\_norm\_only & adv2 & 0.6726 & 0.7908 & 0.7436 & 0.9478 & 0.0522 & -0.0466 & -0.0135 & 0.0135 \\
+week7\_norm\_only & rewrite & 0.9449 & 0.9479 & 0.3122 & 0.9900 & 0.0100 & -0.0156 & 0.0053 & -0.0053 \\
+week7\_norm\_plus\_adv2 & clean & 0.9473 & 0.9471 & 0.3344 & 0.9871 & 0.0129 & 0.0229 & 0.0033 & -0.0033 \\
+week7\_norm\_plus\_adv2 & unicode & 0.9406 & 0.9368 & 0.3658 & 0.9828 & 0.0172 & -0.0074 & 0.0050 & -0.0050 \\
+week7\_norm\_plus\_adv2 & adv2 & 0.8081 & 0.8243 & 0.3178 & 0.8300 & 0.1700 & -0.4725 & -0.1313 & 0.1313 \\
+week7\_norm\_plus\_adv2 & rewrite & 0.9330 & 0.9345 & 0.3471 & 0.9883 & 0.0117 & 0.0193 & 0.0036 & -0.0036 \\
+\bottomrule
+\end{tabular}%
+}
+\normalsize
+\end{table}

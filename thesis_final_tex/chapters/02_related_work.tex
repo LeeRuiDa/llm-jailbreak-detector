@@ -1,0 +1,41 @@
+\chapter{Related Work}
+\label{ch:related_work}
+
+This chapter situates jailbreak and prompt-injection detection within prior work on LLM security, adversarial text robustness, and practical guardrail evaluation. The literature spans three overlapping threads: attack construction, defense mechanisms, and evaluation methodology. In line with the scope of this thesis, the work focuses on prompt-layer screening: scoring a single text payload that represents the user prompt plus any attached context before it reaches a downstream LLM.
+
+\section{Jailbreak attacks and defenses}
+
+Jailbreaks are prompts crafted to induce policy-violating behavior by manipulating instruction hierarchy, authority cues, or multi-step compliance patterns. Recent surveys organize these methods under broader prompt-hacking taxonomies and emphasize their recurring structure: instruction override, role escalation, and staged compliance scaffolding \cite{rababah2024sokprompthacking}. These surveys are useful because they explain why many jailbreaks share surface cues that can be targeted by rules or detectors, while also showing why attacker adaptation quickly erodes brittle defenses.
+
+Benchmark-style evaluation has become increasingly important. JailbreakBench provides a structured way to assess jailbreak robustness across standardized prompt sets rather than isolated anecdotal prompts \cite{chao2024jailbreakbench}. Automated red-teaming work similarly argues for repeatable attack suites and operational metrics rather than one-off demonstrations \cite{perez2022redteaming}. These developments motivate a detector evaluation protocol that is explicit about operating points and held-out distributions.
+
+Defense work generally falls into three families: model-level alignment and refusal training, inference-time guardrails such as rule filters or safety classifiers, and system-level prompt-architecture mitigations. This thesis contributes to the second category by evaluating two input-side guardrails behind a common score-and-threshold interface: a transparent rules baseline and an optional learned classifier.
+
+\section{Prompt injection and indirect injection}
+
+Prompt injection differs from jailbreaks mainly in where the malicious instruction originates and how it enters the final model input. In direct prompt injection, the attacker places the instruction in the user prompt. In indirect prompt injection, the malicious text is embedded in external content --- retrieved passages, documents, or tool outputs --- that the application later concatenates into the prompt seen by the model \cite{abdelnabi2023promptinjection}. This distinction is especially important for retrieval-augmented and agentic systems because an attacker may never control the user prompt itself.
+
+Related work on prompt extraction and prompt leakage further reinforces the idea that the prompt boundary is a security boundary. Models can be coerced into revealing hidden instructions or system prompts, and the same prompt-layer weaknesses that enable leakage also motivate input-side screening \cite{zhang2023effectivepromptextraction}.
+
+\section{Guardrails and low-FPR evaluation}
+
+Rule-based guardrails remain appealing because they are fast, interpretable, and easy to deploy in constrained environments. They can catch recurrent takeover phrases and obvious system-prompt extraction attempts, but prior work also notes their brittleness under paraphrase and obfuscation \cite{rababah2024sokprompthacking,chao2024jailbreakbench}. Learned detectors, by contrast, can generalize beyond exact strings, but they introduce calibration and distribution-shift risks.
+
+That distinction is why threshold-free metrics are not sufficient. AUROC and AUPRC summarize ranking quality across all thresholds, but deployments operate at one threshold. Work on calibration shows that modern neural networks can be poorly calibrated, meaning a threshold that behaves well on validation may drift under shift \cite{guo2017calibration}. Classical ROC analysis likewise emphasizes that the best threshold depends on the cost structure and the intended operating region \cite{fawcett2006roc}. This thesis therefore adopts a threshold-transfer protocol: select the threshold on validation at a target FPR, then apply it unchanged to held-out splits.
+
+\section{Unicode security and adversarial text perturbations}
+
+Unicode creates multiple evasion channels: fullwidth characters, confusables, combining marks, invisible separators, and bidirectional controls. Unicode normalization and security guidance formalize many of these concerns and motivate canonicalization as a practical hardening step \cite{unicode_uax15,unicode_uts39}. Trojan Source demonstrates how invisible Unicode controls can change interpretation without obvious visual differences, illustrating the wider security relevance of Unicode manipulation \cite{boucher2023trojansource}.
+
+Because attacker behavior is adaptive and hard to sample exhaustively, robustness evaluation often uses controlled perturbation suites. In adversarial machine learning, adversarial examples and robust optimization established the value of systematic stress tests that probe brittleness under targeted transformations \cite{goodfellow2015adversarial,madry2018towards}. In this thesis, Unicode obfuscation, adv2-style character noise, and rewrite-style paraphrase are used as reproducible robustness probes. They do not claim to cover all attacker strategies, but they make distribution-shift and operating-point failure observable.
+
+\input{tables/tab2_threats.tex}
+\input{tables/tab2_related_work_comparison.tex}
+
+Table~\ref{tab:related_work_comparison} highlights the main positioning point of this thesis. Prior work already establishes that jailbreaks and prompt injection are meaningful prompt-layer threats, that benchmarked evaluation is preferable to anecdotal examples, and that classifier-style guardrails are a practical defense family. What remains less explicit in that literature is a deployment-shaped question: if a detector is calibrated at a strict benign false-positive target on one validation distribution, how stable is that same operating point when transferred unchanged to shifted prompt distributions?
+
+This thesis therefore occupies a narrower but clearer niche than a generic guardrail survey or benchmark report. It does not claim to deliver the broadest benchmark coverage, nor a completed external-guardrail bakeoff. Instead, it contributes an offline reproducible detector study centered on low-FPR threshold transfer, fixed operating-point reporting, and locked artifacts that expose where calibration fails even when threshold-free ranking remains strong. That positioning is important for academic honesty: the work is strongest as an operating-point study of prompt-layer detection, not as a general claim that guardrails are solved.
+
+\section{Positioning of this thesis}
+
+Two lessons from the related work guide the rest of the thesis. First, jailbreaks and prompt injection are instruction-level attacks enabled by prompt composition and untrusted text surfaces. Second, guardrails are operational decision systems: evaluation must reflect a fixed threshold with explicit false-positive constraints and measured behavior under shift. Chapters~\ref{ch:method} through \ref{ch:system_demo} instantiate these lessons in an offline-capable detector system and a locked low-FPR threshold-transfer protocol.

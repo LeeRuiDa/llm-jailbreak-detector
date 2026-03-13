@@ -1,0 +1,37 @@
+\begin{table}[t]
+\centering
+\caption{Final learned-model configuration and selection settings for the Week 7 winner.}
+\label{tab:week7_model_config}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.34\textwidth}X}
+\toprule
+Item & Value \\
+\midrule
+Run id & \texttt{week7\_norm\_only} \\
+Backbone & \texttt{microsoft/deberta-v3-base} \\
+Seed & 42 \\
+Max input length & 256 \\
+Batching & \texttt{batch\_size=16}, \texttt{grad\_accum=2} \\
+Optimizer & AdamW with \texttt{lr=2e-4} \\
+Schedule & Linear warmup-decay with \texttt{warmup\_ratio=0.06} over \texttt{total\_steps=18870} \\
+Epochs & 3 \\
+Target FPR & \texttt{0.01} \\
+Score definition & Attack-class softmax probability \\
+Attack class index & \texttt{attack\_class\_index=1} \\
+Score transform & \texttt{identity} selected from validation statistics \\
+Normalization policy & \texttt{normalize\_train=true}, \texttt{normalize\_infer=false} \\
+Unicode preprocessing & \texttt{false} \\
+Mark dropping & \texttt{normalize\_drop\_mn=false} \\
+Augmentation policy & \texttt{aug\_adv2\_prob=0.0}, \texttt{aug\_rewrite\_prob=0.0} \\
+LoRA rank/alpha/dropout & \texttt{r=8}, \texttt{alpha=16}, \texttt{dropout=0.05} \\
+LoRA target modules & \texttt{key\_proj}, \texttt{value\_proj}, \texttt{query\_proj} \\
+Modules saved outside adapters & \texttt{pooler}, \texttt{classifier}, \texttt{score} \\
+Checkpoint evidence in frozen run & \texttt{ckpt\_epoch\_0..2/checkpoint.pt} plus \texttt{metrics.json} \\
+Best-checkpoint rule & Highest validation \texttt{tpr\_at\_fpr}; AUROC used as tie-break \\
+Chosen epoch under that rule & Epoch 2 \\
+Stored validation threshold & \texttt{val\_threshold = 0.7340} \\
+Validation operating point & \texttt{val\_fpr\_actual=0.009409}, \texttt{val\_tpr\_at\_fpr=0.9696} \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}

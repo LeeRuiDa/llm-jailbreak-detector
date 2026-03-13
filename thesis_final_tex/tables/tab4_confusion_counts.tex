@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\caption{Confusion-count view of the transferred threshold for \texttt{week7\_norm\_only}. Counts are derived from locked aggregate split sizes and the stored operating-point rates.}
+\label{tab:confusion_counts}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Split & Benign $n_0$ & Attack $n_1$ & FP & TN & TP & FN \\
+\midrule
+\texttt{val} & 3082 & 3024 & 29 & 3053 & 2932 & 92 \\
+\texttt{test\_main} & 3147 & 32083 & 98 & 3049 & 31664 & 419 \\
+\texttt{test\_main\_unicode} & 3147 & 32083 & 135 & 3012 & 31639 & 444 \\
+\texttt{test\_main\_rewrite} & 3147 & 32083 & 167 & 2980 & 31767 & 316 \\
+\texttt{test\_main\_adv2} & 3147 & 32083 & 2015 & 1132 & 31976 & 107 \\
+\texttt{test\_jbb} & 98 & 99 & 57 & 41 & 97 & 2 \\
+\texttt{test\_jbb\_unicode} & 98 & 99 & 64 & 34 & 97 & 2 \\
+\texttt{test\_jbb\_rewrite} & 98 & 99 & 56 & 42 & 98 & 1 \\
+\texttt{test\_jbb\_adv2} & 98 & 99 & 83 & 15 & 89 & 10 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}

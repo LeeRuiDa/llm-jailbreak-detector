@@ -1,0 +1,184 @@
+\chapter{Method}
+\label{ch:method}
+
+This chapter describes the detection task, the canonical data representation, preprocessing options, detector implementations, and the locked Week~7 evaluation protocol used for the final reported results. The primary design goal is a deployment-relevant operating point: detect jailbreak and prompt-injection attempts while keeping false positives low.
+
+\section{Task definition and label policy}
+
+The project frames guardrail detection as a binary classification problem over text inputs. Given a payload consisting of the user prompt and any attached context, the detector returns a scalar score and a binary decision. The label policy is intentionally simple and consistent across sources:
+\begin{itemize}
+  \item \texttt{label = 1} denotes attack or unsafe input;
+  \item \texttt{label = 0} denotes benign or safe input.
+\end{itemize}
+
+The loader and training pipeline consume only this binary label as ground truth. Auxiliary fields such as \texttt{attack\_type} are preserved for analysis but do not change class membership.
+
+An example is labeled as an attack if it attempts to override higher-priority instructions, extract hidden prompts or secrets, or hijack downstream actions or tools. Benign educational or analytical discussion of jailbreaks is treated as a hard negative when the source dataset marks it benign and the text is explanatory rather than imperative.
+
+\section{Source datasets and label inheritance}
+
+The final v1 dataset is assembled from three corpus families: BIPIA for indirect prompt injection, JailbreakDB for direct-jailbreak and benign hard-negative material, and JailbreakBench behaviors for the held-out JBB stress split. The thesis does not claim a new full-corpus manual annotation pass over these sources. Instead, the local data pipeline performs four bounded transformations: binary label normalization, canonical prompt/context assembly, leakage-aware splitting by \texttt{group\_id}, and deduplication by normalized text hash.
+
+\input{tables/tab3_dataset_sources.tex}
+
+The label-normalization rules are source-specific and are implemented in the ingestion scripts. For BIPIA, attack rows produced by the builder are mapped to \texttt{prompt\_injection\_indirect} and clean rows are kept as benign. For JailbreakDB, source fields such as \texttt{jailbreak} or \texttt{label} are normalized into the binary task, while source-specific tactic or category metadata is retained when available. For JailbreakBench, the harmful-behavior CSV is mapped directly to attack examples and the benign-behavior CSV to benign examples. This means the local build standardizes labels, but it does not overwrite the underlying semantic intent of the original corpora with a new end-to-end relabeling process.
+
+\section{Notation}
+
+Table~\ref{tab:notation} defines the main symbols used in the detector formulation and evaluation protocol. The notation is intentionally minimal and follows the shipped implementation: one canonical text payload, one binary label, one attack score, and one transferred threshold.
+
+\input{tables/tab3_notation.tex}
+
+\section{Canonical schema and text template}
+
+All datasets are represented as JSONL with one record per line. The canonical schema enforced by the loader contains \texttt{id}, \texttt{text}, \texttt{label}, \texttt{attack\_type}, \texttt{source}, \texttt{group\_id}, and optional \texttt{meta}. This single schema allows the same detector interface to be used for both direct jailbreaks and indirect prompt injection examples.
+
+When source corpora provide prompt and context separately, ingestion assembles one \texttt{text} field using a fixed template:
+\begin{verbatim}
+[PROMPT]
+{prompt}
+
+[CONTEXT]
+{context}
+\end{verbatim}
+If context is missing, only the \texttt{[PROMPT]} block is emitted. The repository enforces this template during ingestion, but it does \emph{not} currently implement explicit escaping of delimiter-like marker lines inside raw prompt or context text. Delimiter escaping is therefore treated as a documented limitation rather than a shipped safeguard.
+
+\section{Split construction and locked counts}
+
+Leakage prevention is handled through \texttt{group\_id}. Group-based validation checks are used to detect overlap between the clean train, validation, and evaluation splits. Perturbation variants are generated only after split construction and carry provenance back to the base example through ids and metadata rather than through a second round of split assignment. This reduces the risk of measuring memorization across near-duplicate prompt families while keeping the robustness variants strictly downstream of the split builder.
+
+The final build applies an additional deduplication pass over a normalized-text hash. The construction order is deliberate: BIPIA \texttt{test} then BIPIA \texttt{train}, followed by JailbreakDB \texttt{test\_main}, \texttt{val}, and \texttt{train}, and finally the held-out JBB split. Under this priority order the build drops 41,252 duplicated train rows, 4,725 duplicated \texttt{test\_main} rows, and 3 duplicated JBB rows, as recorded in \texttt{data/v1/dedup\_report.json}. This ordering favors stable held-out evaluation membership over maximizing raw training volume.
+
+The authoritative Week~7 counts are those in the locked evaluation pack. Table~\ref{tab:week7_split_counts} is the only valid split-count table for the final thesis; all later chapters align to it.
+
+\input{tables/tab3_split_counts.tex}
+
+The most important consequence of these counts is calibration granularity. The validation split contains 3,082 benign examples, so the smallest achievable FPR step on validation is approximately $1/3082 \approx 0.0324\%$. The JBB split contains only 98 benign examples, so its FPR is much more coarsely quantized at roughly 1.02\% per extra benign false positive.
+
+\section{Preprocessing and normalization}
+
+Adversarial text attacks frequently rely on Unicode obfuscation to bypass brittle string checks and degrade model tokenization. The repository provides two distinct optional canonicalization mechanisms \cite{boucher2023trojansource,unicode_uax15,unicode_uts39}:
+\begin{enumerate}
+  \item \textbf{Unicode preprocessing}, an explicit transform that maps selected fullwidth forms and confusables, strips specific zero-width characters, and collapses whitespace.
+  \item \textbf{Normalization}, a broader NFKC-based category filter that removes format characters by default and optionally removes nonspacing marks.
+\end{enumerate}
+
+These controls are intentionally separate. Unicode preprocessing targets a bounded set of obfuscation tactics, while normalization provides a more general category-based filter. The final locked Week~7 configuration is \texttt{normalize\_train=true} and \texttt{normalize\_infer=false}. In other words, the learned model sees normalization during training, but the locked runtime operating point is evaluated without forcing normalization at inference time.
+
+\section{Detector backends}
+
+The runtime exposes two detectors behind a common score-and-threshold interface:
+\begin{itemize}
+  \item \textbf{Rules detector.} A deterministic regex baseline with score 1.0 when any pattern matches and 0.0 otherwise. The default decision threshold is 0.5.
+  \item \textbf{LoRA detector.} A Hugging Face sequence classifier fine-tuned through LoRA adapters and loaded from a local run directory. The final Week~7 run uses a DeBERTa-v3-base backbone.
+\end{itemize}
+
+The learned detector is optional by design. Rules mode is always available offline, while LoRA mode requires local artifacts and optional ML dependencies. This keeps the shipped demo surface examiner-safe even when the learned model is unavailable.
+
+Table~\ref{tab:week7_model_config} summarizes the frozen hyperparameters, LoRA settings, and checkpoint-selection evidence used for the final learned run.
+
+\input{tables/tab3_model_config.tex}
+
+The compact table is backed by two sources of truth: the frozen \texttt{runs/week7\_norm\_only/config.json} snapshot and the shipped \texttt{scripts/train\_lora.py} training pipeline. Together they fix the seed, optimizer, scheduler, LoRA adapter layout, threshold target, and exported runtime settings. They also show that the frozen run directory stores per-epoch checkpoints plus \texttt{metrics.json}; although the current script additionally writes a dedicated \texttt{best\_checkpoint} artifact, the final selected state for \texttt{week7\_norm\_only} can already be reconstructed from the frozen epoch checkpoints and validation metrics without changing any reported result.
+
+\section{Learned detector score, optimization, and training objective}
+
+For the learned detector, the encoder produces a representation $h(x)$ and the classifier head maps it to logits through a learned linear projection,
+\begin{equation}
+  z(x) = W_c h(x) + b_c.
+\end{equation}
+LoRA adapts selected backbone projection matrices through a low-rank update
+\begin{equation}
+  W = W_0 + \Delta W, \qquad \Delta W = \frac{\alpha_{\mathrm{LoRA}}}{r} B A,
+\end{equation}
+where $W_0$ is the frozen backbone weight matrix, $A$ and $B$ are trainable low-rank adapter matrices, $r$ is the adapter rank, and $\alpha_{\mathrm{LoRA}}$ is the LoRA scaling factor. In the final Week~7 run, adapters are inserted into \texttt{query\_proj}, \texttt{key\_proj}, and \texttt{value\_proj}, with $r=8$ and $\alpha_{\mathrm{LoRA}}=16$.
+
+Given the adapted classifier, the backbone produces a two-class logit vector $z(x)$ over benign and attack classes. Let $c_a$ denote the attack-class index used when extracting the attack probability. The locked Week~7 run stores \texttt{attack\_class\_index = 1}, so the attack score is defined as
+\begin{equation}
+  s(x) = \operatorname{softmax}(z(x))_{c_a}.
+\end{equation}
+This definition matches the shipped training and evaluation code: the score used for thresholding is the softmax probability assigned to the attack class, not a raw logit or an independently calibrated probability.
+
+The implementation also includes a validation-only score-direction check so that higher scores always correspond to more attack-like examples. Let $\bar{s}^{(1)}_{\mathrm{val}}$ and $\bar{s}^{(0)}_{\mathrm{val}}$ denote the mean validation scores for attack and benign examples. The post-check score is
+\begin{equation}
+  \tilde{s}(x) =
+  \begin{cases}
+    s(x), & \text{if } \bar{s}^{(1)}_{\mathrm{val}} \ge \bar{s}^{(0)}_{\mathrm{val}}, \\
+    1 - s(x), & \text{otherwise.}
+  \end{cases}
+\end{equation}
+For \texttt{week7\_norm\_only}, the stored \texttt{score\_transform} is \texttt{identity}, so no score inversion was applied in the final reported run.
+
+Given a minibatch $\mathcal{B} = \{(x_i, y_i)\}_{i=1}^{N}$, the classifier is trained with the standard sequence-classification cross-entropy objective returned by the Hugging Face model:
+\begin{equation}
+  \mathcal{L}(\mathcal{B}) = -\frac{1}{N} \sum_{i=1}^{N} \sum_{c \in \{0,1\}} \mathbf{1}[y_i = c] \log p(c \mid x_i),
+\end{equation}
+where
+\begin{equation}
+  p(c \mid x_i) = \operatorname{softmax}(z(x_i))_c.
+\end{equation}
+The training script uses this model-provided loss directly. It does not add class weights, focal loss, or a balanced sampler; minibatches are formed by the ordinary shuffled training loader. Given the strongly attack-heavy training split, this choice matters: the final operating behavior is shaped by the source-data mix and by validation-side threshold calibration rather than by explicit loss reweighting.
+
+\subsection{Frozen training configuration}
+
+The final learned run uses \texttt{seed=42}, \texttt{max\_length=256}, \texttt{batch\_size=16}, \texttt{grad\_accum=2}, and \texttt{epochs=3}. Optimization uses AdamW with \texttt{lr=2e-4}. The scheduler is linear warmup-decay with \texttt{warmup\_ratio=0.06}; given the frozen run's \texttt{total\_steps=18870}, this corresponds to 1,132 warmup steps before linear decay over the remaining updates.
+
+The LoRA adapter layout is likewise fixed by the run snapshot and training script: rank $r=8$, scaling $\alpha=16$, dropout $0.05$, and target modules \texttt{key\_proj}, \texttt{value\_proj}, and \texttt{query\_proj}. The training script also preserves the \texttt{pooler}, \texttt{classifier}, and \texttt{score} modules outside the adapters. These details matter because they determine which parts of the classifier are adapted versus preserved, and therefore directly affect reproducibility.
+
+\subsection{Model selection and frozen checkpoint evidence}
+
+Each training epoch emits a checkpoint under \texttt{ckpt\_epoch\_i/checkpoint.pt}, and validation summaries are appended to \texttt{metrics.json}. The current training pipeline defines the best checkpoint as the epoch with the highest validation \texttt{tpr\_at\_fpr} at the target FPR, using AUROC only as a tie-break. Applied to the frozen \texttt{week7\_norm\_only} metrics history, this rule selects epoch 2, which records validation \texttt{tpr\_at\_fpr=0.9696}, \texttt{fpr\_actual=0.009409}, and \texttt{auroc=0.9983}. That selected state is the basis for the stored validation threshold and all downstream locked-pack evaluations.
+
+\section{Metrics and operating point}
+
+At threshold $\tau$, the binary detector decision is
+\begin{equation}
+  \hat{y}_{\tau}(x) = \mathbf{1}[\tilde{s}(x) \ge \tau].
+\end{equation}
+For a split $\mathcal{S}$ with benign subset $\mathcal{S}^{(0)}$ and attack subset $\mathcal{S}^{(1)}$, the false-positive rate and true-positive rate are
+\begin{equation}
+  \mathrm{FPR}_{\mathcal{S}}(\tau) = \frac{1}{\lvert \mathcal{S}^{(0)} \rvert} \sum_{(x,y) \in \mathcal{S}^{(0)}} \mathbf{1}[\hat{y}_{\tau}(x) = 1],
+\end{equation}
+\begin{equation}
+  \mathrm{TPR}_{\mathcal{S}}(\tau) = \frac{1}{\lvert \mathcal{S}^{(1)} \rvert} \sum_{(x,y) \in \mathcal{S}^{(1)}} \mathbf{1}[\hat{y}_{\tau}(x) = 1].
+\end{equation}
+The attack success rate reported in the repository is the attack false-negative rate:
+\begin{equation}
+  \mathrm{ASR}_{\mathcal{S}}(\tau) = \frac{1}{\lvert \mathcal{S}^{(1)} \rvert} \sum_{(x,y) \in \mathcal{S}^{(1)}} \mathbf{1}[\hat{y}_{\tau}(x) = 0] = 1 - \mathrm{TPR}_{\mathcal{S}}(\tau).
+\end{equation}
+Ranking quality is reported with AUROC and AUPRC \cite{fawcett2006roc}. These threshold-free metrics remain useful, but they are not the deployment decision rule used in this thesis.
+
+The operating threshold is selected on validation at target FPR $\alpha = 0.01$ and then transferred unchanged to every held-out split \cite{guo2017calibration}. The implementation does not choose an arbitrary quantile formula; it selects from the candidate thresholds returned by the validation ROC curve. Formally,
+\begin{equation}
+  \tau^{\star} = \arg\max_{\tau \in \mathcal{T}_{\mathrm{val}}} \left\{ \mathrm{FPR}_{\mathrm{val}}(\tau) : \mathrm{FPR}_{\mathrm{val}}(\tau) \le \alpha \right\}.
+\end{equation}
+If no candidate threshold satisfies the constraint, the implementation falls back to the threshold with the smallest available validation FPR. For the locked final run, this procedure yields \texttt{val\_threshold = 0.7340}, actual validation FPR \texttt{0.009409}, and validation TPR \texttt{0.9696}. This policy is central to the thesis claim boundary: the method measures threshold transfer honestly instead of re-tuning per split.
+
+\section{Locked Week~7 protocol}
+
+The Week~7 locked protocol has four fixed steps:
+\begin{enumerate}
+  \item select \texttt{week7\_norm\_only} as the final run;
+  \item compute the validation threshold on \texttt{val} only;
+  \item apply that threshold unchanged to \texttt{test\_main}, \texttt{test\_jbb}, and all Unicode, adv2, and rewrite variants;
+  \item package only aggregate results, figures, error cases, configuration metadata, and environment metadata into the locked evaluation pack.
+\end{enumerate}
+
+Figure~\ref{fig:method_pipeline} summarizes the detector flow, and Figure~\ref{fig:threshold_transfer} shows the threshold-transfer protocol used throughout the final results.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ch3_pipeline.png}
+  \caption{Detection pipeline from input text through detector scoring and allow/block decision.}
+  \label{fig:method_pipeline}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ch3_eval_protocol.png}
+  \caption{Locked evaluation protocol: calibrate $\tau$ on validation and transfer it unchanged to all evaluation splits.}
+  \label{fig:threshold_transfer}
+\end{figure}
+
+The locked pack is therefore the single source of truth for counts, metrics, and figures. It strengthens reproducibility, but it does not justify overclaiming blind-test isolation or production-ready robustness.
+

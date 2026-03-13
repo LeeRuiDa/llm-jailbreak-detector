@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Rules baseline results at the fixed threshold of 0.5.}
+\label{tab:rules_baseline_results}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Split & AUROC & AUPRC & FPR@0.5 & TPR@0.5 & ASR@0.5 \\
+\midrule
+test\_main & 0.5024 & 0.9111 & 0.0016 & 0.0064 & 0.9936 \\
+test\_main\_unicode & 0.5009 & 0.9108 & 0.0010 & 0.0028 & 0.9972 \\
+test\_main\_adv2 & 0.5007 & 0.9108 & 0.0000 & 0.0015 & 0.9985 \\
+test\_jbb\_adv2 & 0.5000 & 0.5025 & 0.0000 & 0.0000 & 1.0000 \\
+test\_main\_rewrite & 0.5021 & 0.9110 & 0.0016 & 0.0057 & 0.9943 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
