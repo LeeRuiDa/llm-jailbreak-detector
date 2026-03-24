@@ -15,13 +15,13 @@ It does not transfer stably. The locked Week~7 protocol shows clear threshold dr
 
 adv2 is the strongest failure mode. It preserves very high recall on \texttt{test\_main\_adv2} while driving benign FPR to 0.6403, and on \texttt{test\_jbb\_adv2} it harms both benign control and recall. Unicode perturbations mostly damage calibration rather than recall, while rewrite is milder on the main distribution but does not rescue cross-dataset stability on JBB. Hypothesis H2 is supported.
 
-\textbf{RQ3: How does a fully offline rules baseline compare to an optional learned detector under the same decision interface and constraints?}
+\textbf{RQ3: Within the shipped runtime interface and available submission artifacts, how does a fully offline rules baseline compare to an optional learned detector?}
 
 The rules backend is useful as a guaranteed offline fallback, transparent sanity check, and examiner-safe demo path, but it is not a competitive detector on the evaluated splits. On \texttt{test\_main}, the rules baseline achieves AUROC = 0.5024 and TPR = 0.0064 at threshold 0.5, far below the learned detector. The learned detector therefore provides the only strong scoring path in this project, while the rules detector provides operational simplicity and reproducibility. Hypothesis H3 is only partially supported: the rules system is viable as a fallback and baseline, not as an effective substitute for the learned model.
 
 \section{Contributions recap}
 
-The final contribution set is specific and defensible:
+The thesis makes three broad contributions, realized through five concrete deliverables:
 \begin{enumerate}
   \item an offline-capable jailbreak and prompt-injection detector with a CLI and Python library;
   \item two detector backends behind one runtime interface: an always-available rules baseline and an optional LoRA classifier loaded strictly from local artifacts;

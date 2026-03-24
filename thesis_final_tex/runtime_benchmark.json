@@ -12,23 +12,43 @@
     "measurements": {
       "benign": {
         "count": 80.0,
-        "mean_ms": 0.0032175004889722914,
+        "mean_ms": 0.00322499981848523,
         "median_ms": 0.0031999661587178707,
-        "p95_ms": 0.003400025889277458,
+        "p95_ms": 0.0033999676816165447,
         "min_ms": 0.0030999653972685337,
-        "max_ms": 0.004599976819008589
+        "max_ms": 0.004699977580457926
       },
       "attack": {
         "count": 80.0,
-        "mean_ms": 0.0008874994819052517,
+        "mean_ms": 0.0009112496627494693,
         "median_ms": 0.000900006853044033,
         "p95_ms": 0.00100000761449337,
         "min_ms": 0.0007999478839337826,
-        "max_ms": 0.001900014467537403
+        "max_ms": 0.002100015990436077
       }
     }
   },
   "lora": {
-    "error": "Failed to load local model files. Ensure the HF cache is populated or provide local weights in the cache."
+    "detector": "lora",
+    "threshold_mode": "val",
+    "repeats": 20,
+    "measurements": {
+      "benign": {
+        "count": 20.0,
+        "mean_ms": 69.60144499316812,
+        "median_ms": 69.1884999978356,
+        "p95_ms": 72.9299999657087,
+        "min_ms": 67.26520002121106,
+        "max_ms": 74.251199956052
+      },
+      "attack": {
+        "count": 20.0,
+        "mean_ms": 70.53875500278082,
+        "median_ms": 70.19200001377612,
+        "p95_ms": 75.50460001220927,
+        "min_ms": 63.82640002993867,
+        "max_ms": 78.04839999880642
+      }
+    }
   }
 }

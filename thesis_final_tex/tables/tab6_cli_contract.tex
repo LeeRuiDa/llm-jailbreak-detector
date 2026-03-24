@@ -3,15 +3,19 @@
 \caption{CLI contract for the shipped runtime.}
 \label{tab:cli_contract}
 \scriptsize
-\begin{tabularx}{\textwidth}{p{0.14\textwidth}p{0.25\textwidth}p{0.28\textwidth}p{0.12\textwidth}X}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{p{0.13\textwidth}p{0.24\textwidth}p{0.30\textwidth}p{0.11\textwidth}X}
 \toprule
 Command & Inputs & Outputs & Determinism & Common errors \\
 \midrule
-\texttt{jbd predict} & Required \texttt{--text}; optional \texttt{--detector}, \texttt{--run\_dir}, \texttt{--threshold}, \texttt{--normalize}, \texttt{--drop-mn}, \texttt{--id} & JSON fields \texttt{text}, \texttt{score}, \texttt{label}, \texttt{decision}, \texttt{threshold}, \texttt{threshold\_used}, \texttt{flagged}, \texttt{detector}, \texttt{model\_version}, \texttt{latency\_ms}, \texttt{rationale}, \texttt{normalize\_infer}, optional \texttt{id} & Deterministic except for latency & Missing \texttt{run\_dir}, invalid threshold value, missing local artifacts or optional ML dependencies \\
-\texttt{jbd batch} & Required \texttt{--input}, \texttt{--output}; same detector, threshold, and normalization flags as \texttt{predict} & JSONL rows with the same schema as \texttt{predict} & Deterministic except for latency & Invalid JSONL, missing \texttt{text}, inaccessible output path \\
+\texttt{jbd predict} & Required \texttt{--text}; optional \texttt{--detector}, \texttt{--run\_dir}, \texttt{--threshold}, \texttt{--normalize}, \texttt{--drop-mn}, \texttt{--id} & JSON: \texttt{text}, \texttt{score}, \texttt{label}, \texttt{decision}, \texttt{flagged};\newline Threshold: \texttt{threshold}, \texttt{threshold\_used};\newline Metadata: \texttt{detector}, \texttt{model\_version}, \texttt{latency\_ms}, \texttt{rationale}, \texttt{normalize\_infer}, optional \texttt{id} & Deterministic except for latency & Missing \texttt{run\_dir}; invalid threshold; missing local artifacts; optional ML dependencies unavailable \\
+\texttt{jbd batch} & Required \texttt{--input}, \texttt{--output}; same detector, threshold, and normalization flags as \texttt{predict} & JSONL rows using the same schema as \texttt{predict} & Deterministic except for latency & Invalid JSONL; missing \texttt{text}; inaccessible output path \\
 \texttt{jbd normalize} & Required \texttt{--text}; optional \texttt{--drop-mn} & Normalized text only & Deterministic & Argument parsing errors \\
 \texttt{jbd doctor} & No additional arguments & Environment diagnostics text & Deterministic for a fixed environment & Reports missing optional packages as diagnostics \\
 \bottomrule
 \end{tabularx}
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
 \normalsize
 \end{table}

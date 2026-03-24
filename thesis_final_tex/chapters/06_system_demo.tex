@@ -1,7 +1,7 @@
 \chapter{System and Demo Implementation}
 \label{ch:system_demo}
 
-This chapter documents the shipped software surface used to reproduce the locked evaluation artifacts and to support a live capstone demo. The system is intentionally CLI-first and offline-capable. That is an engineering decision rather than a presentation choice: it keeps the public runtime small, removes hidden web-service dependencies, and makes the project runnable on an examiner machine with the repository, Python, and optional local model artifacts.
+This chapter documents the software interface and engineering decisions used to reproduce the locked evaluation artifacts and to support a live capstone demo. The system is intentionally CLI-first and offline-capable. That is an engineering decision rather than a presentation choice: it keeps the runtime surface small, removes hidden web-service dependencies, and makes the project runnable on an examiner machine with the repository, Python, and optional local model artifacts.
 
 \section{Overview and deployment context}
 
@@ -11,7 +11,7 @@ The intended deployment context is an inline middleware guardrail placed before 
 
 \section{Requirements and measured runtime evidence}
 
-The system chapter should state not only what the software does, but what it is required to do in the submission setting. Table~\ref{tab:runtime_requirements} summarizes the functional and non-functional requirements that are actually defended by the shipped runtime. These are thesis-facing requirements distilled from the final submission bundle, not aspirational product goals.
+The system chapter should state not only what the software does, but what it is required to do in the submission setting. Table~\ref{tab:runtime_requirements} summarizes the functional and non-functional requirements that are actually defended by the shipped runtime. These are thesis-facing requirements distilled from the final submission bundle, not speculative future requirements.
 
 \input{tables/tab6_requirements.tex}
 
@@ -19,7 +19,7 @@ Table~\ref{tab:runtime_benchmark} adds a small measured runtime view. The measur
 
 \input{tables/tab6_runtime_benchmark.tex}
 
-The benchmark reinforces the deployment boundary already stated in this thesis. The rules path is effectively instantaneous on CPU and remains the safest live-demo mode. The optional LoRA path could not be timed on the benchmark machine because the local Hugging Face backbone cache was absent, which is consistent with the software's explicit offline and no-hidden-download policy: the runtime fails clearly instead of fetching weights during the demo.
+The benchmark reinforces the deployment boundary already stated in this thesis. The rules path is effectively instantaneous on CPU and remains the safest live-demo mode. The optional LoRA path is also runnable offline once the local run artifacts and backbone cache are already present, but it is materially heavier: on this CPU benchmark machine it takes about 70\,ms per single prediction rather than a few microseconds. This is still acceptable for capstone-scale local use, but it does not change the system claim boundary. Rules mode remains the safest demonstration path, while LoRA mode remains an artifact-dependent offline option rather than an always-available runtime.
 
 \section{Runtime architecture}
 
@@ -45,13 +45,13 @@ Figure~\ref{fig:prediction_sequence} makes the same design concrete for a single
 
 \subsection{CLI-first public surface}
 
-The public command surface is intentionally small: \texttt{predict}, \texttt{batch}, \texttt{normalize}, and \texttt{doctor}. This keeps the project easy to verify in a defense setting and avoids claiming a richer deployment interface than the repository actually ships. \texttt{predict} is the single-record path, \texttt{batch} is the reproducible batch-scoring path, \texttt{normalize} exposes preprocessing directly for inspection, and \texttt{doctor} reports interpreter and optional dependency status.
+The command interface is intentionally small: \texttt{predict}, \texttt{batch}, \texttt{normalize}, and \texttt{doctor}. This keeps the project easy to verify in a defense setting and avoids claiming a richer deployment interface than the repository actually ships. \texttt{predict} is the single-record path, \texttt{batch} is the reproducible batch-scoring path, \texttt{normalize} exposes preprocessing directly for inspection, and \texttt{doctor} reports interpreter and optional dependency status.
 
 This design also constrains the thesis claim boundary. Older drafts described richer middleware-style behavior, but the shipped runtime does not expose a web API, policy routing layer, or redaction modes. Restricting the public surface to the implemented CLI keeps the software narrative aligned with the repository and with the smoke tests in \texttt{tests/test\_cli\_smoke.py}.
 
 \subsection{Centralized threshold resolution in \texttt{Predictor}}
 
-The most important internal design choice is the use of \texttt{Predictor} as a single control point for detector selection and threshold application. The CLI does not compare raw backend scores directly. Instead, it constructs a \texttt{Predictor}, passes the input text and inference options into \texttt{predict()}, and receives a normalized result object containing the score, binary label, resolved threshold, detector name, and metadata.
+The central implementation decision is the use of \texttt{Predictor} as a single control point for detector selection and threshold application. The CLI does not compare raw backend scores directly. Instead, it constructs a \texttt{Predictor}, passes the input text and inference options into \texttt{predict()}, and receives a normalized result object containing the score, binary label, resolved threshold, detector name, and metadata.
 
 Centralizing this logic avoids threshold drift between command paths. In rules mode, the effective default threshold is 0.5. In LoRA mode, \texttt{Predictor} can resolve the operating point from the stored run configuration when the caller uses \texttt{threshold=val}, or accept an explicit numeric threshold. This keeps \texttt{predict} and \texttt{batch} consistent and ensures that the public CLI reuses the same threshold policy described in Chapters~\ref{ch:method}--\ref{ch:robustness}.
 

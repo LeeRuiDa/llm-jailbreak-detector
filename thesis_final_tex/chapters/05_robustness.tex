@@ -67,7 +67,7 @@ Rewrite is much milder on the main distribution. On \texttt{test\_main\_rewrite}
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.88\linewidth]{roc_week7_norm_only_test_jbb_adv2.png}
-  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_jbb\_adv2}. The red marker shows the transferred validation threshold $\tau = 0.7340$; even in the low-FPR inset, the operating point remains far from a usable benign-error regime.}
+  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_jbb\_adv2}. The red marker shows the transferred validation threshold $\tau = 0.7340$; the low-FPR inset shows the same operating point in the regime that matters for deployment, where it still remains far from a usable benign-error region.}
   \label{fig:roc_jbb_adv2}
 \end{figure}
 
@@ -84,7 +84,9 @@ The JBB splits contain only 98 benign examples, so FPR is coarse: each extra ben
 
 \section{Threshold and calibration sensitivity follow-up}
 
-Two post-lock analyses help separate ``bad threshold choice'' from ``bad threshold transfer.'' First, a local threshold sweep was run around the frozen validation threshold using the archived per-example predictions. Figure~\ref{fig:threshold_stability_followup} shows that the main-distribution operating point is fairly stable in a narrow neighborhood around $\tau = 0.7340$: on \texttt{test\_main}, FPR moves only from 0.0324 at $\tau - 0.05$ to 0.0308 at $\tau + 0.05$. The shifted splits behave very differently. Over the same sweep, \texttt{test\_jbb} remains between FPR = 0.6224 and 0.5714, \texttt{test\_main\_adv2} remains between 0.6498 and 0.6273, and \texttt{test\_jbb\_adv2} remains between 0.8469 and 0.8367. This means the dominant problem is not one unlucky threshold value; it is that shifted benign score distributions have moved so far that small threshold adjustments cannot recover a usable operating point.
+This section reports the remaining two follow-up analyses introduced in Chapter~\ref{ch:experiments}. The threshold sweep asks whether the locked threshold is merely a bad local choice. The benign-heavy sensitivity study asks whether recalibrating on a more deployment-shaped validation prior materially improves the operating point under shift.
+
+First, a local threshold sweep was run around the frozen validation threshold using the archived per-example predictions. Figure~\ref{fig:threshold_stability_followup} shows that the main-distribution operating point is fairly stable in a narrow neighborhood around $\tau = 0.7340$: on \texttt{test\_main}, FPR moves only from 0.0324 at $\tau - 0.05$ to 0.0308 at $\tau + 0.05$. The shifted splits behave very differently. Over the same sweep, \texttt{test\_jbb} remains between FPR = 0.6224 and 0.5714, \texttt{test\_main\_adv2} remains between 0.6498 and 0.6273, and \texttt{test\_jbb\_adv2} remains between 0.8469 and 0.8367. This means the dominant problem is not one unlucky threshold value; it is that shifted benign score distributions have moved so far that small threshold adjustments cannot recover a usable operating point.
 
 \begin{figure}[t]
   \centering

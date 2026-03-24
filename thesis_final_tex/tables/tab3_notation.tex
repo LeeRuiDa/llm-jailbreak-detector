@@ -11,10 +11,12 @@ $x$ & Canonical input text formed from the prompt and optional context. \\
 $h(x)$ & Encoder representation used by the sequence-classification head before the final linear projection. \\
 $y \in \{0,1\}$ & Ground-truth label, where $1$ denotes attack and $0$ denotes benign input. \\
 $z(x) \in \mathbb{R}^2$ & Logit vector output by the learned classifier before softmax. \\
+$W_c, b_c$ & Weight matrix and bias vector of the final linear classifier head that maps $h(x)$ to logits. \\
 $p(c \mid x)$ & Predicted class probability for class $c$ after softmax over $z(x)$. \\
 $c_a$ & Attack-class index used when extracting the attack probability; the locked Week~7 run uses $c_a=1$. \\
 $s(x)$ & Attack score used for thresholding, defined as the softmax probability of the attack class. \\
 $\tilde{s}(x)$ & Post-orientation score after the validation-only score-direction check. \\
+$\bar{s}^{(1)}_{\mathrm{val}}, \bar{s}^{(0)}_{\mathrm{val}}$ & Mean validation scores for attack and benign examples, used only in the score-direction check. \\
 $\hat{y}_{\tau}(x)$ & Binary detector decision at threshold $\tau$, where $1$ means attack is predicted. \\
 $\tau$ & Operating threshold transferred from validation to held-out splits. \\
 $\alpha$ & Target validation false-positive rate used for threshold selection; here $\alpha=0.01$. \\

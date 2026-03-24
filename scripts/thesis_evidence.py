@@ -218,7 +218,7 @@ def threshold_sweep(args: argparse.Namespace) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     rows: list[dict[str, object]] = []
-    fig, axes = plt.subplots(3, 1, figsize=(8.2, 10.5), constrained_layout=True)
+    fig, axes = plt.subplots(3, 1, figsize=(8.8, 11.1))
     metric_names = [("fpr", "False Positive Rate"), ("tpr", "True Positive Rate"), ("asr", "Attack Success Rate")]
 
     for split in splits:
@@ -230,12 +230,23 @@ def threshold_sweep(args: argparse.Namespace) -> None:
             rows.append(metrics)
             split_metrics.append(metrics)
         for ax, (metric_key, metric_label) in zip(axes, metric_names):
-            ax.plot(thresholds, [row[metric_key] for row in split_metrics], linewidth=2.0, label=split)
-            ax.axvline(center, color="#c1121f", linestyle="--", linewidth=1.2)
+            ax.plot(thresholds, [row[metric_key] for row in split_metrics], linewidth=2.45, label=split)
+            ax.axvline(center, color="#c1121f", linestyle="--", linewidth=1.55)
             ax.set_ylabel(metric_label)
     axes[-1].set_xlabel("Threshold")
-    axes[0].set_title(f"Threshold stability around tau={center:.4f}")
-    axes[0].legend(loc="best")
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        ncol=min(len(labels), 3),
+        frameon=True,
+        fontsize=10,
+        columnspacing=1.2,
+        handlelength=1.9,
+        bbox_to_anchor=(0.5, 0.988),
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.942))
     fig.savefig(out_dir / "threshold_stability.png", dpi=220)
     plt.close(fig)
 
@@ -331,18 +342,19 @@ def benign_heavy_analysis(args: argparse.Namespace) -> None:
     _write_csv(out_dir / "benign_heavy_summary.csv", summary_rows)
     _write_json(out_dir / "benign_heavy_summary.json", summary_rows)
 
-    fig, axes = plt.subplots(2, 1, figsize=(8.0, 8.5), constrained_layout=True)
+    fig, axes = plt.subplots(2, 1, figsize=(8.2, 8.8))
     for split in eval_splits:
         fpr_points = [row["mean"] for row in summary_rows if row["split"] == split and row["metric"] == "fpr"]
         tpr_points = [row["mean"] for row in summary_rows if row["split"] == split and row["metric"] == "tpr"]
         xs = [row["attack_prevalence"] for row in summary_rows if row["split"] == split and row["metric"] == "fpr"]
-        axes[0].plot(xs, fpr_points, marker="o", linewidth=1.8, label=split)
-        axes[1].plot(xs, tpr_points, marker="o", linewidth=1.8, label=split)
+        axes[0].plot(xs, fpr_points, marker="o", linewidth=2.0, markersize=4.5, label=split)
+        axes[1].plot(xs, tpr_points, marker="o", linewidth=2.0, markersize=4.5, label=split)
     axes[0].set_ylabel("Held-out FPR")
     axes[1].set_ylabel("Held-out TPR")
     axes[1].set_xlabel("Attack prevalence in resampled validation slice")
-    axes[0].set_title(f"Benign-heavy calibration sensitivity for {run_dir.name}")
-    axes[0].legend(loc="best")
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=min(len(labels), 3), frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.985))
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
     fig.savefig(out_dir / "benign_heavy_sensitivity.png", dpi=220)
     plt.close(fig)
 

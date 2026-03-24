@@ -23,6 +23,12 @@ The final v1 dataset is assembled from three corpus families: BIPIA for indirect
 
 The label-normalization rules are source-specific and are implemented in the ingestion scripts. For BIPIA, attack rows produced by the builder are mapped to \texttt{prompt\_injection\_indirect} and clean rows are kept as benign. For JailbreakDB, source fields such as \texttt{jailbreak} or \texttt{label} are normalized into the binary task, while source-specific tactic or category metadata is retained when available. For JailbreakBench, the harmful-behavior CSV is mapped directly to attack examples and the benign-behavior CSV to benign examples. This means the local build standardizes labels, but it does not overwrite the underlying semantic intent of the original corpora with a new end-to-end relabeling process.
 
+\subsection{Ambiguity handling and annotation policy}
+
+The thesis does not claim a fresh manual annotation campaign over the full merged dataset. Instead, it inherits source labels and applies a bounded local policy for normalization into the binary task. This policy is conservative in two directions. First, imperative prompts that attempt instruction override, prompt extraction, or downstream action hijacking are retained as attacks when the source marks them as harmful. Second, analytical or explanatory discussion of jailbreaks, system prompts, or security behavior is retained as benign when the source marks it benign and the text is descriptive rather than directive.
+
+This distinction matters most for hard negatives. Some benign examples contain high-risk vocabulary, quoted jailbreak strings, or policy-discussion language that can look attack-like to both rules and learned detectors. The local build keeps those examples as benign rather than relabeling them away, because they are part of the real false-positive problem the thesis studies. Ambiguous rewrite outputs are treated similarly: they inherit the base-example label in the generated robustness sets, but the thesis explicitly discusses semantic drift as a limitation rather than pretending those inherited labels are perfect.
+
 \section{Notation}
 
 Table~\ref{tab:notation} defines the main symbols used in the detector formulation and evaluation protocol. The notation is intentionally minimal and follows the shipped implementation: one canonical text payload, one binary label, one attack score, and one transferred threshold.
@@ -70,7 +76,7 @@ These controls are intentionally separate. Unicode preprocessing targets a bound
 The runtime exposes two detectors behind a common score-and-threshold interface:
 \begin{itemize}
   \item \textbf{Rules detector.} A deterministic regex baseline with score 1.0 when any pattern matches and 0.0 otherwise. The default decision threshold is 0.5.
-  \item \textbf{LoRA detector.} A Hugging Face sequence classifier fine-tuned through LoRA adapters and loaded from a local run directory. The final Week~7 run uses a DeBERTa-v3-base backbone.
+  \item \textbf{LoRA detector.} A Hugging Face sequence classifier fine-tuned through low-rank adaptation (LoRA) adapters and loaded from a local run directory. The final Week~7 run uses a DeBERTa-v3-base backbone.
 \end{itemize}
 
 The learned detector is optional by design. Rules mode is always available offline, while LoRA mode requires local artifacts and optional ML dependencies. This keeps the shipped demo surface examiner-safe even when the learned model is unavailable.
@@ -79,9 +85,11 @@ Table~\ref{tab:week7_model_config} summarizes the frozen hyperparameters, LoRA s
 
 \input{tables/tab3_model_config.tex}
 
-The compact table is backed by two sources of truth: the frozen \texttt{runs/week7\_norm\_only/config.json} snapshot and the shipped \texttt{scripts/train\_lora.py} training pipeline. Together they fix the seed, optimizer, scheduler, LoRA adapter layout, threshold target, and exported runtime settings. They also show that the frozen run directory stores per-epoch checkpoints plus \texttt{metrics.json}; although the current script additionally writes a dedicated \texttt{best\_checkpoint} artifact, the final selected state for \texttt{week7\_norm\_only} can already be reconstructed from the frozen epoch checkpoints and validation metrics without changing any reported result.
+The compact table is backed by two sources of truth: the frozen \texttt{runs/week7\_norm\_only/config.json} snapshot and the shipped \texttt{scripts/train\_lora.py} training pipeline. Together they fix the seed, optimizer, scheduler, LoRA adapter layout, threshold target, and exported runtime settings. They also show that the frozen run directory stores per-epoch checkpoints plus \texttt{metrics.json}; although the current script additionally writes a dedicated \texttt{best\_checkpoint} artifact, the final selected state for \texttt{week7\_norm\_only} can already be reconstructed from the frozen epoch checkpoints and validation metrics without changing any reported result. The next subsection turns that implementation description into the scoring pipeline used throughout the evaluation chapters.
 
 \section{Learned detector score, optimization, and training objective}
+
+In plain language, the learned detector performs five steps. First, it encodes the combined prompt-context text into a single representation. Second, a classifier head maps that representation to benign and attack logits. Third, the attack-class probability becomes the score used for thresholding. Fourth, the operating threshold is chosen on validation only. Fifth, that same threshold is transferred unchanged to every held-out split so that threshold drift is measured rather than hidden by per-split recalibration.
 
 For the learned detector, the encoder produces a representation $h(x)$ and the classifier head maps it to logits through a learned linear projection,
 \begin{equation}
@@ -148,11 +156,11 @@ The attack success rate reported in the repository is the attack false-negative 
 \end{equation}
 Ranking quality is reported with AUROC and AUPRC \cite{fawcett2006roc}. These threshold-free metrics remain useful, but they are not the deployment decision rule used in this thesis.
 
-The operating threshold is selected on validation at target FPR $\alpha = 0.01$ and then transferred unchanged to every held-out split \cite{guo2017calibration}. The implementation does not choose an arbitrary quantile formula; it selects from the candidate thresholds returned by the validation ROC curve. Formally,
+The operating threshold is selected on validation at target FPR $\alpha = 0.01$ and then transferred unchanged to every held-out split \cite{guo2017calibration}. The implementation does not choose an arbitrary quantile formula; it evaluates only the candidate thresholds returned by the validation ROC curve. Among those ROC candidates, only thresholds with $\mathrm{FPR}_{\mathrm{val}}(\tau) \le \alpha$ are eligible. Formally,
 \begin{equation}
   \tau^{\star} = \arg\max_{\tau \in \mathcal{T}_{\mathrm{val}}} \left\{ \mathrm{FPR}_{\mathrm{val}}(\tau) : \mathrm{FPR}_{\mathrm{val}}(\tau) \le \alpha \right\}.
 \end{equation}
-If no candidate threshold satisfies the constraint, the implementation falls back to the threshold with the smallest available validation FPR. For the locked final run, this procedure yields \texttt{val\_threshold = 0.7340}, actual validation FPR \texttt{0.009409}, and validation TPR \texttt{0.9696}. This policy is central to the thesis claim boundary: the method measures threshold transfer honestly instead of re-tuning per split.
+This means the code selects the ROC candidate with the largest admissible validation FPR under the cap, rather than searching over a continuous threshold range. If multiple ROC candidates share that same admissible FPR, the implementation keeps the first one returned by the ROC routine. If no candidate threshold satisfies the constraint, the implementation falls back to the threshold with the smallest available validation FPR. For the locked final run, this procedure yields \texttt{val\_threshold = 0.7340}, actual validation FPR \texttt{0.009409}, and validation TPR \texttt{0.9696}. This policy is central to the thesis claim boundary: the method measures threshold transfer honestly instead of re-tuning per split.
 
 \section{Locked Week~7 protocol}
 

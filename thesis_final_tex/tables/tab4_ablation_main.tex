@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{Compact ablation summary by condition group. The main text keeps the mean thresholded operating-point metrics that support the selection argument; the full AUROC/AUPRC/ASR and delta matrix is moved to Appendix~\ref{app:ablation_detail}.}
+\label{tab:ablation_effects}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.24\textwidth}*{8}{>{\centering\arraybackslash}p{0.073\textwidth}}}
+\toprule
+Run & \shortstack{Clean\\FPR} & \shortstack{Clean\\TPR} & \shortstack{Unicode\\FPR} & \shortstack{Unicode\\TPR} & \shortstack{adv2\\FPR} & \shortstack{adv2\\TPR} & \shortstack{Rewrite\\FPR} & \shortstack{Rewrite\\TPR} \\
+\midrule
+week7\_adv2\_only & 0.3773 & 0.9935 & 0.4096 & 0.9985 & 0.3809 & 0.8766 & 0.3870 & 0.9938 \\
+week7\_control & 0.3115 & 0.9838 & 0.3732 & 0.9778 & 0.7903 & 0.9613 & 0.3279 & 0.9847 \\
+week7\_norm\_only & 0.3064 & 0.9834 & 0.3480 & 0.9830 & 0.7436 & 0.9478 & 0.3122 & 0.9900 \\
+\shortstack[l]{week7\_norm\\plus\_adv2} & 0.3344 & 0.9871 & 0.3658 & 0.9828 & 0.3178 & 0.8300 & 0.3471 & 0.9883 \\
+\bottomrule
+\end{tabular}
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+\normalsize
+\end{table}

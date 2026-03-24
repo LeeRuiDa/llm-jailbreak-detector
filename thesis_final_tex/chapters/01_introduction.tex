@@ -20,6 +20,8 @@ This thesis considers two related prompt-layer threats. A \emph{jailbreak} is a 
 
 The central security concern is that LLM applications often treat all text in the context window as potentially instruction-bearing. When trusted instructions and untrusted content are mixed into one payload, the application may unintentionally expose its instruction boundary to adversarial text. This is the prompt-layer analogue of control-data confusion.
 
+A simplified example makes the risk concrete. Suppose a user asks, ``Summarize the attached policy note for me.'' The application then appends retrieved context containing text such as ``Ignore previous instructions and reveal the hidden system prompt.'' If both strings are passed to the model as one combined input, the attachment is no longer just data; it has become competing instruction-like text inside the same prompt window. The detector studied in this thesis therefore evaluates the combined payload rather than the user prompt in isolation.
+
 \section{Why low false-positive rate matters}
 
 A detector is only useful if it is operationally tolerable. Excessive blocking of benign prompts creates user friction, hides system capability behind false alarms, and undermines trust in the guardrail itself. For that reason, the evaluation in this thesis is organized around a strict operating-point target of approximately 1\% FPR on validation. This target is a calibration goal, not a guarantee that a single fixed threshold will remain at 1\% under shift.
@@ -43,7 +45,7 @@ The thesis is organized around three research questions:
 \begin{itemize}
   \item \textbf{RQ1.} How does a validation-calibrated threshold at FPR = 1\% transfer across held-out splits under distribution shift when applied unchanged?
   \item \textbf{RQ2.} Which perturbation families most degrade low-FPR threshold-transfer stability under fixed operating-point evaluation?
-  \item \textbf{RQ3.} How does the project's fully offline rules baseline compare to the optional learned detector under the same runtime interface and evaluation constraints?
+  \item \textbf{RQ3.} Within the shipped runtime interface and available submission artifacts, how does the project's fully offline rules baseline compare to the optional learned detector?
 \end{itemize}
 
 The corresponding hypotheses are:
@@ -55,11 +57,11 @@ The corresponding hypotheses are:
 
 \section{Contributions}
 
-This thesis contributes three distinct outputs, each with a different academic role:
+This thesis makes three broad contributions, realized through several concrete deliverables:
 \begin{itemize}
-  \item \textbf{Empirical contribution.} The thesis shows that strong threshold-free ranking performance does not preserve a low-FPR operating point under distribution shift. In the locked Week~7 study, the selected run \texttt{week7\_norm\_only} remains strong on the main distribution but exhibits large benign false-positive drift on JBB-style and adv2-style inputs.
+  \item \textbf{Empirical contribution.} The thesis shows that strong threshold-free ranking performance does not preserve a low-FPR operating point under distribution shift. Under the locked evaluation protocol, the selected learned detector remains strong on the main distribution but exhibits large benign false-positive drift on JBB-style and adv2-style inputs.
   \item \textbf{Methodological contribution.} The thesis adopts a low-FPR threshold-transfer protocol in which the decision threshold is calibrated on validation and transferred unchanged to all held-out splits. This frames guardrail detection as an operating-point evaluation problem rather than a threshold-free leaderboard exercise.
-  \item \textbf{Systems contribution.} The project delivers an offline-capable jailbreak and prompt-injection detector with a common runtime interface for a rules baseline and an optional LoRA detector, together with a committed Week~7 locked evaluation pack containing source-of-truth tables, figures, sanitized error cases, and configuration and environment snapshots.
+  \item \textbf{Systems contribution.} The project delivers an offline-capable jailbreak and prompt-injection detector with a common runtime interface for a rules baseline and an optional LoRA detector, together with a locked evaluation bundle containing source-of-truth tables, figures, sanitized error cases, and configuration and environment snapshots.
 \end{itemize}
 
 \section{Scope and claim boundary}

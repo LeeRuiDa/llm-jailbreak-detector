@@ -8,7 +8,7 @@
 Mode & Threshold policy & Benign mean / p95 & Attack mean / p95 & Availability note \\
 \midrule
 Rules & Fixed $0.5$ & $0.0032$ ms / $0.0034$ ms & $0.0009$ ms / $0.0010$ ms & Measured over 80 repeated CPU calls on the current Windows 11 / Python 3.12.10 submission workspace; always-available demo path. \\
-LoRA & Stored validation threshold (\texttt{val}) & N/A & N/A & Benchmark attempt failed cleanly because the local backbone files were not present in the Hugging Face cache. This confirms that the shipped runtime does not make hidden downloads and that LoRA remains artifact-dependent. \\
+LoRA & Stored validation threshold (\texttt{val}) & $69.60$ ms / $72.93$ ms & $70.54$ ms / $75.50$ ms & Measured over 20 repeated CPU calls with the local \texttt{week7\_norm\_only} artifacts and populated backbone cache. This confirms that the learned path is runnable offline once local model artifacts are present, but it is still much heavier than rules mode. \\
 \bottomrule
 \end{tabularx}
 \normalsize

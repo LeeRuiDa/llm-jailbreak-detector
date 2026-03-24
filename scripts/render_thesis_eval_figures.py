@@ -64,9 +64,10 @@ def build_roc(split: str, output_name: str, title: str) -> None:
     ax.set_title(title)
     ax.legend(loc="lower right", frameon=True)
 
-    inset = ax.inset_axes([0.48, 0.48, 0.45, 0.42])
-    inset.plot(fpr, tpr, color="#0b6e4f", linewidth=1.7)
-    inset.scatter([point_fpr], [point_tpr], s=36, color="#c1121f", zorder=5)
+    inset = ax.inset_axes([0.46, 0.47, 0.47, 0.43])
+    inset.plot(fpr, tpr, color="#0b6e4f", linewidth=2.1)
+    inset.scatter([point_fpr], [point_tpr], s=46, color="#c1121f", zorder=5)
+    inset.axvline(point_fpr, color="#c1121f", linestyle="--", linewidth=1.1, alpha=0.75)
     inset.set_xlim(0, min(0.2, max(point_fpr * 1.25, 0.05)))
     inset.set_ylim(max(0.0, point_tpr - 0.2), 1.01)
     inset.set_title("Low-FPR view", fontsize=8)

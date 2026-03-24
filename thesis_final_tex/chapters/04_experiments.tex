@@ -49,7 +49,7 @@ The key empirical signature is the adv2 failure mode. For \texttt{week7\_norm\_o
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.88\linewidth]{roc_week7_norm_only_test_main_adv2.png}
-  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_main\_adv2}. The red marker shows the transferred validation threshold $\tau = 0.7340$; the inset makes clear that the chosen operating point sits far outside the low-FPR region even though the full curve still ranks attacks above benign text better than chance.}
+  \caption{ROC curve for \texttt{week7\_norm\_only} on \texttt{test\_main\_adv2}. The red marker shows the transferred validation threshold $\tau = 0.7340$; the inset provides a low-FPR view of the same operating point, which still lies far outside a usable benign-error regime even though the full curve ranks attacks above benign text better than chance.}
   \label{fig:roc_main_adv2}
 \end{figure}
 
@@ -83,11 +83,13 @@ Because the main distribution is large and JBB is small, uncertainty differs sha
 
 The locked Week~7 pack remains the authoritative result bundle for this thesis. However, four follow-up analyses were run after the lock stage to test whether the core claim survives beyond one frozen table view: calibration curves, threshold sweeps, benign-heavy calibration sensitivity, and three-seed reruns of the selected configuration. These follow-up artifacts are indexed in Appendix~\ref{app:repro_artifacts}. They are reported here as additional evidence, not as replacement locked-pack results.
 
-Table~\ref{tab:followup_calibration} shows that score calibration is strong on \texttt{val} and \texttt{test\_main}, but it breaks sharply under cross-dataset and adv2 shift. On \texttt{val}, expected calibration error (ECE) is only 0.0065; on \texttt{test\_main} it remains low at 0.0087. By contrast, \texttt{test\_jbb} rises to 0.3227 and \texttt{test\_jbb\_adv2} to 0.4316. This matters because the thesis claim is not only that attacks rank above benign text, but that thresholded scores should remain interpretable enough to support low benign false-positive deployment. The follow-up calibration analysis supports the opposite conclusion under shift: score confidence itself becomes unreliable.
+These four analyses answer different questions. Calibration asks whether the detector scores remain probabilistically interpretable under shift. Threshold sweeps ask whether the chosen operating point is locally brittle or whether nearby thresholds behave the same way. Benign-heavy calibration sensitivity asks whether recalibrating on a more deployment-shaped validation prior materially changes the outcome. Three-seed reruns ask whether the observed threshold-transfer failure could be dismissed as a one-seed accident. The calibration and seed findings are summarized here, while the threshold-sweep and benign-heavy results are discussed in Chapter~\ref{ch:robustness} because they are primarily robustness follow-ups.
+
+Calibration asks whether the detector score can still be read as a trustworthy confidence signal once the data distribution changes. Table~\ref{tab:followup_calibration} shows that score calibration is strong on \texttt{val} and \texttt{test\_main}, but it breaks sharply under cross-dataset and adv2 shift. Expected calibration error (ECE) summarizes the average gap between predicted attack scores and the observed attack frequency within fixed score bins; lower values are better. The Brier score is the mean squared error between the predicted attack score and the binary label, so lower values again indicate better calibrated and more accurate probabilities. In the follow-up analysis script, ECE is computed with 10 equal-width bins over $[0,1]$. On \texttt{val}, ECE is only 0.0065; on \texttt{test\_main} it remains low at 0.0087. By contrast, \texttt{test\_jbb} rises to 0.3227 and \texttt{test\_jbb\_adv2} to 0.4316. This matters because the thesis claim is not only that attacks rank above benign text, but that thresholded scores should remain interpretable enough to support low benign false-positive deployment. The follow-up calibration analysis supports the opposite conclusion under shift: score confidence itself becomes unreliable.
 
 \input{tables/tab4_followup_calibration.tex}
 
-The three-seed reruns reinforce the same claim from a different angle. Table~\ref{tab:followup_multiseed} shows that threshold-free ranking on the main distribution is stable across seeds, with \texttt{test\_main} AUROC = 0.9958 $\pm$ 0.0004. However, the transferred operating point is noticeably less stable. The mean \texttt{test\_main} benign FPR rises to 0.0402 $\pm$ 0.0089, above the single frozen-run value of 0.0311, and shifted splits remain highly variable. The per-seed validation thresholds also differ materially even though they all satisfy the same validation FPR target: seed~41 selects $\tau = 0.5199$, seed~42 selects $\tau = 0.7450$, and seed~43 selects $\tau = 0.6042$. This is strong evidence that the detector family is stable in ranking terms but unstable in transferred operating-point terms.
+Seed sensitivity asks whether the threshold-transfer result is specific to one random initialization or persists across reruns. The three-seed reruns reinforce the same claim from a different angle. Table~\ref{tab:followup_multiseed} shows that threshold-free ranking on the main distribution is stable across seeds, with \texttt{test\_main} AUROC = 0.9958 $\pm$ 0.0004. However, the transferred operating point is noticeably less stable. The mean \texttt{test\_main} benign FPR rises to 0.0402 $\pm$ 0.0089, above the single frozen-run value of 0.0311, and shifted splits remain highly variable. The per-seed validation thresholds also differ materially even though they all satisfy the same validation FPR target: seed~41 selects $\tau = 0.5199$, seed~42 selects $\tau = 0.7450$, and seed~43 selects $\tau = 0.6042$. This is strong evidence that the detector family is stable in ranking terms but unstable in transferred operating-point terms.
 
 \input{tables/tab4_followup_multiseed.tex}
 
@@ -105,9 +107,9 @@ The rewrite false-negative files expose a more subtle issue: some attack-labeled
 
 \section{Ablation interpretation}
 
-Table~\ref{tab:ablation_effects} aggregates the ablation outcomes across clean, Unicode, adv2, and rewrite condition groups.
+Table~\ref{tab:ablation_effects} keeps the main thresholded operating-point summary across clean, Unicode, adv2, and rewrite condition groups. The full AUROC/AUPRC/ASR and control-relative delta matrix is moved to Appendix~\ref{app:ablation_detail} so that the main chapter remains readable at normal page scale.
 
-\input{tables/tab4_ablation.tex}
+\input{tables/tab4_ablation_main.tex}
 
 The ablation confirms that there is no universally good configuration. Heavy adv2-oriented training improves some adv2 averages but can damage recall under the small JBB adv2 slice. The selected \texttt{week7\_norm\_only} configuration is therefore best understood as a compromise: it improves the overall harm profile relative to the alternatives, but it does not resolve threshold-transfer instability.
 
