@@ -1,0 +1,23 @@
+{
+  "source_path": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\data\\v1\\test_main.jsonl",
+  "output_path": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\data\\eval_slices\\benign_realistic_slice_v1.jsonl",
+  "manifest_path": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\reports\\thesis_support\\benign_realistic_slice\\benign_realistic_slice_v1_manifest.csv",
+  "per_category_target": 50,
+  "total_selected": 300,
+  "candidate_counts": {
+    "prompt_context": 150,
+    "coding": 508,
+    "rewrite_summary": 58,
+    "translation": 186,
+    "knowledge_qa": 831,
+    "general_assistance": 113
+  },
+  "selected_counts": {
+    "prompt_context": 50,
+    "coding": 50,
+    "rewrite_summary": 50,
+    "translation": 50,
+    "knowledge_qa": 50,
+    "general_assistance": 50
+  }
+}

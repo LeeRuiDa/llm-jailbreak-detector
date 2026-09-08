@@ -2,6 +2,8 @@
 
 This folder stores follow-up analyses for the frozen `week7_norm_only` run. The goal is to strengthen the thesis argument without changing the locked Week 7 evidence pack.
 
+The completed thesis and additional evidence on inference-time preprocessing, the external comparator, benign-only evaluation, and truncation are indexed in the [completion notes](../../docs/PROJECT_COMPLETION.md#supplementary-evidence).
+
 ## Completed analyses
 
 ### 1. Calibration curves and ECE

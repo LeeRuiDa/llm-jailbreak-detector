@@ -1,0 +1,7 @@
+category,category_display,n_benign,fp,fpr,blocked_per_1000
+general_assistance,General assistance,50,0,0.0,0.0
+coding,Coding assistance,50,0,0.0,0.0
+rewrite_summary,Rewriting / summarization,50,0,0.0,0.0
+translation,Translation,50,0,0.0,0.0
+knowledge_qa,Knowledge Q&A,50,0,0.0,0.0
+prompt_context,Prompt+context benign,50,28,0.56,560.0

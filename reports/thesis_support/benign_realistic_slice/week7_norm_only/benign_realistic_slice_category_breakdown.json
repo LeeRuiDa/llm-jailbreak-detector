@@ -1,0 +1,50 @@
+[
+  {
+    "category": "general_assistance",
+    "category_display": "General assistance",
+    "n_benign": 50,
+    "fp": 0,
+    "fpr": 0.0,
+    "blocked_per_1000": 0.0
+  },
+  {
+    "category": "coding",
+    "category_display": "Coding assistance",
+    "n_benign": 50,
+    "fp": 0,
+    "fpr": 0.0,
+    "blocked_per_1000": 0.0
+  },
+  {
+    "category": "rewrite_summary",
+    "category_display": "Rewriting / summarization",
+    "n_benign": 50,
+    "fp": 0,
+    "fpr": 0.0,
+    "blocked_per_1000": 0.0
+  },
+  {
+    "category": "translation",
+    "category_display": "Translation",
+    "n_benign": 50,
+    "fp": 0,
+    "fpr": 0.0,
+    "blocked_per_1000": 0.0
+  },
+  {
+    "category": "knowledge_qa",
+    "category_display": "Knowledge Q&A",
+    "n_benign": 50,
+    "fp": 0,
+    "fpr": 0.0,
+    "blocked_per_1000": 0.0
+  },
+  {
+    "category": "prompt_context",
+    "category_display": "Prompt+context benign",
+    "n_benign": 50,
+    "fp": 28,
+    "fpr": 0.56,
+    "blocked_per_1000": 560.0
+  }
+]

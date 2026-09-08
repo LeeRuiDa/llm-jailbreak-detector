@@ -1,0 +1,10 @@
+{
+  "auroc": 0.6388888888888888,
+  "auprc": 0.6272714139621972,
+  "tpr_at_fpr": 0.8686868686868687,
+  "fpr_actual": 0.826530612244898,
+  "threshold": 0.7340390086174011,
+  "asr_at_threshold": 0.13131313131313133,
+  "target_fpr": 0.01,
+  "threshold_source": "runs\\week7_norm_only_eval_norm\\predictions_val_norm.jsonl"
+}

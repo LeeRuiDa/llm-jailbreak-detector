@@ -1,0 +1,20 @@
+{
+  "split_name": "benign_realistic_slice",
+  "run_dir": "C:\\Users\\LENOVO\\Desktop\\Capstone Project\\llm-guardrail-capstone-starter\\runs\\week7_norm_only",
+  "threshold": 0.7340390086174011,
+  "n_benign": 300,
+  "fp": 28,
+  "fpr": 0.09333333333333334,
+  "blocked_per_1000": 93.33333333333334,
+  "wilson_95": {
+    "low": 0.06536379092760147,
+    "high": 0.13158619880389022
+  },
+  "baseline_split": "test_main",
+  "baseline_fpr": 0.031140768986336193,
+  "baseline_blocked_per_1000": 31.14076898633619,
+  "baseline_benign_n": 3147,
+  "baseline_fp": 98,
+  "delta_vs_baseline_fpr": 0.062192564346997145,
+  "delta_vs_baseline_blocked_per_1000": 62.19256434699715
+}

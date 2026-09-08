@@ -1,5 +1,7 @@
 # HANDOFF
 
+> Historical development handoff. The capstone and defense revisions are complete, and the author has graduated. For the final thesis and current project status, see [the completion notes](docs/PROJECT_COMPLETION.md). The milestones and roadmap below describe earlier stages of the work.
+
 ## Repo map (high level)
 
 ```

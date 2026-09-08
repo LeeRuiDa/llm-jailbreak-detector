@@ -1,0 +1,23 @@
+{
+  "model_id": "meta-llama/Llama-Prompt-Guard-2-86M",
+  "output_dir": "reports\\proposal_recovery\\comparators\\prompt_guard2_86m",
+  "attack_class_index": 1,
+  "target_fpr": 0.01,
+  "val_threshold": 0.9984861016273499,
+  "val_fpr_actual": 0.00973393900064893,
+  "val_tpr_at_fpr": 0.25,
+  "max_length": 512,
+  "batch_size": 16,
+  "unicode_preprocess": false,
+  "normalize_infer": false,
+  "device": "cuda",
+  "splits": {
+    "val": "data\\v1\\val.jsonl",
+    "test_main": "data\\v1\\test_main.jsonl",
+    "test_jbb": "data\\v1_holdout\\test_jbb.jsonl",
+    "test_main_unicode": "data\\v1_adv\\test_main_unicode.jsonl",
+    "test_jbb_unicode": "data\\v1_adv\\test_jbb_unicode.jsonl",
+    "test_main_adv2": "data\\v1_adv2\\test_main_adv2.jsonl",
+    "test_jbb_adv2": "data\\v1_adv2\\test_jbb_adv2.jsonl"
+  }
+}
