@@ -125,7 +125,7 @@ function Draw-Label {
     Draw-FittedText -Graphics $Graphics -Text $Text -Rect $rect -MaxFontSize $FontSize -MinFontSize 12 -FontStyle $FontStyle -Color '#334155'
 }
 
-$targets = @('docs/figures','thesis_final_tex/figures')
+$targets = @('docs/figures')
 foreach ($outDir in $targets) {
     $canvas = New-Canvas 2800 1800
     $bmp = $canvas.Bitmap

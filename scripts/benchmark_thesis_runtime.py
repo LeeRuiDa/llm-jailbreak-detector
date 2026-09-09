@@ -12,7 +12,7 @@ from llm_jailbreak_detector.predict import Predictor
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_DIR = ROOT / "runs" / "week7_norm_only"
-OUT_PATH = ROOT / "thesis_final_tex" / "runtime_benchmark.json"
+OUT_PATH = ROOT / "reports" / "thesis_support" / "runtime_benchmark.json"
 
 TEXTS = {
     "benign": "Summarize the following internal policy note in one sentence.",
@@ -73,6 +73,7 @@ def main() -> None:
     except Exception as exc:
         results["lora"] = {"error": str(exc)}
 
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
 

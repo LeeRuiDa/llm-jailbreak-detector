@@ -21,6 +21,6 @@ The PDF contains the dataset-role clarification in Chapter 3, Section 3.1.2, aft
 
 ## Earlier Materials
 
-The Markdown chapters in this folder, `thesis ready chapters/`, and `thesis_final_tex/` record earlier stages of the thesis. They are retained for development history and should not be treated as an exact source for rebuilding the committee-revised PDF. Chapter numbering and wording can differ.
+The Markdown chapters in this folder record earlier stages of the thesis. They are retained as background and should not be treated as an exact source for rebuilding the committee-revised PDF.
 
-Use the PDF for the final thesis narrative and the [locked Week 7 evaluation pack](../reports/week7/locked_eval_pack/week7_norm_only/) for the original experimental results. Supplementary results are indexed in the [completion notes](../docs/PROJECT_COMPLETION.md#supplementary-evidence).
+Use the PDF for the final thesis narrative and the [locked Week 7 evaluation pack](../reports/week7/locked_eval_pack/week7_norm_only/) for the original experimental results. Supporting evidence is indexed in the [completion notes](../docs/PROJECT_COMPLETION.md).

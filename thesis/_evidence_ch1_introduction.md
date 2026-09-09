@@ -12,7 +12,7 @@
 ## Threat model summary
 - Attack class is binary `label=1`; benign is `label=0`. Evidence: `src/data/io.py`, `thesis/03_method.md`.
 - Model-facing input is one canonical `text` field, assembled from prompt and optional context using `[PROMPT]` / `[CONTEXT]` formatting during ingestion. Evidence: `scripts/dataset_utils.py`, `docs/data_schema.md`, `thesis/03_method.md`.
-- Explicit escaping of delimiter-like marker lines is not enforced and should be described as a limitation. Evidence: `scripts/dataset_utils.py`, `docs/TRACEABILITY_MATRIX.md`, `thesis ready chapters/ch3 method.tex.txt`.
+- Explicit escaping of delimiter-like marker lines is not enforced and should be described as a limitation. Evidence: `scripts/dataset_utils.py`, `docs/TRACEABILITY_MATRIX.md`, and `thesis/03_method.md`.
 
 ## Introduction-safe contribution list
 - offline rules baseline that always runs locally

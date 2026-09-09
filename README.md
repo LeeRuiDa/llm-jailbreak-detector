@@ -42,7 +42,7 @@ The learned LoRA backend requires the local adapter artifacts and a cached DeBER
 | Concise project and defense summary | [`docs/PROJECT_COMPLETION.md`](docs/PROJECT_COMPLETION.md) |
 | Final thesis | [`thesis/final_thesis.pdf`](thesis/final_thesis.pdf) |
 
-The remaining folders contain supporting datasets, experiments, reports, and thesis development material retained for research traceability.
+Each top-level folder now has one clear role. Historical drafts and duplicate submission copies remain available through Git history instead of appearing in the current root.
 
 ## Important Scope Notes
 

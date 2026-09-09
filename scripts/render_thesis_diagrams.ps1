@@ -139,7 +139,7 @@ function Draw-Header {
 
 function Save-Diagram {
     param([scriptblock]$Renderer)
-    foreach ($outDir in @('docs/figures', 'thesis_final_tex/figures')) {
+    foreach ($outDir in @('docs/figures')) {
         & $Renderer $outDir
     }
 }
@@ -263,10 +263,6 @@ function Render-Ch6Component {
 Save-Diagram -Renderer ${function:Render-Ch3Pipeline}
 Save-Diagram -Renderer ${function:Render-Ch3Protocol}
 Save-Diagram -Renderer ${function:Render-Ch6Component}
-
-if (Test-Path 'thesis_final_tex\figures\_tmp_draw_test.png') {
-    Remove-Item 'thesis_final_tex\figures\_tmp_draw_test.png' -Force
-}
 
 Write-Output 'Rendered thesis diagrams.'
 

@@ -20,7 +20,7 @@ Primary users:
 | FR-6 | The system shall provide environment diagnostics for demo readiness. | Delivered via `jbd doctor` |
 | FR-7 | The evaluation pipeline shall store the validation operating point and final metrics. | Delivered via `runs/*/val_operating_point.json`, `final_metrics_*.json`, and locked pack snapshots |
 | FR-8 | The project shall package a frozen evidence bundle for thesis reporting. | Delivered via `reports/week7/locked_eval_pack/week7_norm_only/` |
-| FR-9 | The submission shall include a user manual, testing documentation, design documentation, requirements specification, and project development plan. | Delivered in `docs/` and mirrored in `submission/Technical Attachments/` |
+| FR-9 | The submission shall include a user manual, testing documentation, design documentation, and requirements specification. | Delivered in `docs/` |
 
 ## 3. Non-functional requirements
 

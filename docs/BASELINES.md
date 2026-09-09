@@ -45,7 +45,7 @@ python scripts/eval_with_val_threshold.py --val_predictions runs/rules_val_u1/pr
 ```
 
 LoRA baseline (run the notebook twice with USE_UNICODE off/on):
-- `notebooks/capstone_colab_lora.ipynb`
+- `docs/notebooks/capstone_colab_lora.ipynb`
 
 Optional: rebuild the combined table:
 ```bash

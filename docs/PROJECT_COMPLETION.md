@@ -40,6 +40,7 @@ Chapter 4 now clarifies that Table 4.2 reports repeated CPU calls to an already-
 | Dataset and split statistics | [`DATA_STATS.md`](../reports/week7/locked_eval_pack/week7_norm_only/DATA_STATS.md) |
 | Threshold-transfer results | [`week7_table_C_threshold_transfer.md`](../reports/week7/locked_eval_pack/week7_norm_only/tables/week7_table_C_threshold_transfer.md) |
 | Run configuration | [`RUN_CONFIG_SNAPSHOT.md`](../reports/week7/locked_eval_pack/week7_norm_only/RUN_CONFIG_SNAPSHOT.md) |
+| Runtime measurements | [`runtime_benchmark.json`](../reports/thesis_support/runtime_benchmark.json) |
 | Demo instructions | [`docs/DEMO_GUIDE.md`](DEMO_GUIDE.md) |
 
 ## Study Boundaries

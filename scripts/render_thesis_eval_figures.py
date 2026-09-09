@@ -13,7 +13,7 @@ from sklearn.metrics import roc_curve
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_DIR = ROOT / "runs" / "week7_norm_only"
-OUT_DIR = ROOT / "thesis_final_tex" / "figures"
+OUT_DIR = ROOT / "reports" / "thesis_support" / "figures"
 
 THRESHOLD = json.loads((RUN_DIR / "val_operating_point.json").read_text(encoding="utf-8"))["threshold"]
 
